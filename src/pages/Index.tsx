@@ -1,17 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { TabNavigation, TabType } from '@/components/TabNavigation';
 import { Dashboard } from '@/components/Dashboard';
 import { ServiceForm } from '@/components/ServiceForm';
 import { ServiceList } from '@/components/ServiceList';
-import { useServices } from '@/hooks/useServices';
+import { useSupabaseServices } from '@/hooks/useSupabaseServices';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   
   const {
     services,
     filteredServices,
+    loading,
     addService,
     updateService,
     deleteService,
@@ -29,7 +34,25 @@ const Index = () => {
     availableMonths,
     stats,
     filteredStats,
-  } = useServices();
+  } = useSupabaseServices();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">

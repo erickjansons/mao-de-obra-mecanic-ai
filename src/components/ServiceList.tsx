@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { List, ClipboardList, ArrowDown, ArrowUp, Send } from 'lucide-react';
+import { List, ClipboardList, ArrowDown, ArrowUp, Send, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Service, SortBy, SortOrder } from '@/types/service';
 import { ServiceCard } from './ServiceCard';
 import { ServiceFilters } from './ServiceFilters';
 import { FilterSummary } from './FilterSummary';
-import { shareMonthlyServicesOnWhatsApp } from '@/utils/pdfGenerator';
+import { shareMonthlyServicesOnWhatsApp, generateMonthlyPDF } from '@/utils/pdfGenerator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,6 +78,10 @@ export const ServiceList = ({
     shareMonthlyServicesOnWhatsApp(filteredServices, selectedMonth || 'Todos');
   };
 
+  const handleGenerateAllPDF = () => {
+    generateMonthlyPDF(filteredServices, selectedMonth || 'Todos');
+  };
+
   const SortIcon = sortOrder === 'desc' ? ArrowDown : ArrowUp;
 
   return (
@@ -125,14 +129,24 @@ export const ServiceList = ({
                 Valor {sortBy === 'value' && <SortIcon className="w-3 h-3 ml-1" />}
               </Button>
               {filteredServices.length > 0 && (
-                <Button
-                  size="sm"
-                  onClick={handleSendAllWhatsApp}
-                  className="bg-success hover:bg-success/80"
-                >
-                  <Send className="w-4 h-4 mr-1" />
-                  Enviar Todos
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    onClick={handleGenerateAllPDF}
+                    className="bg-primary hover:bg-primary/80"
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSendAllWhatsApp}
+                    className="bg-success hover:bg-success/80"
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    WhatsApp
+                  </Button>
+                </>
               )}
             </div>
           </div>
