@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { List, ClipboardList, ArrowDown, ArrowUp } from 'lucide-react';
+import { List, ClipboardList, ArrowDown, ArrowUp, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Service, SortBy, SortOrder } from '@/types/service';
 import { ServiceCard } from './ServiceCard';
 import { ServiceFilters } from './ServiceFilters';
 import { FilterSummary } from './FilterSummary';
+import { shareMonthlyServicesOnWhatsApp } from '@/utils/pdfGenerator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +74,10 @@ export const ServiceList = ({
     }
   };
 
+  const handleSendAllWhatsApp = () => {
+    shareMonthlyServicesOnWhatsApp(filteredServices, selectedMonth || 'Todos');
+  };
+
   const SortIcon = sortOrder === 'desc' ? ArrowDown : ArrowUp;
 
   return (
@@ -95,14 +100,14 @@ export const ServiceList = ({
       <div className="gradient-border rounded-xl shadow-xl border border-border">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-accent rounded-lg flex items-center justify-center">
                 <List className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-lg font-semibold">Lista de Serviços</h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant="secondary"
                 size="sm"
@@ -119,6 +124,16 @@ export const ServiceList = ({
               >
                 Valor {sortBy === 'value' && <SortIcon className="w-3 h-3 ml-1" />}
               </Button>
+              {filteredServices.length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={handleSendAllWhatsApp}
+                  className="bg-success hover:bg-success/80"
+                >
+                  <Send className="w-4 h-4 mr-1" />
+                  Enviar Todos
+                </Button>
+              )}
             </div>
           </div>
         </div>
