@@ -9,13 +9,24 @@ const formatCurrency = (value: number) => {
   return `R$ ${value.toFixed(2)}`;
 };
 
+// HTML escape function to prevent XSS attacks
+const escapeHtml = (unsafe: string | undefined | null): string => {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 export const generateServicePDF = (service: Service) => {
   const content = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Ordem de Serviço - ${service.cliente}</title>
+  <title>Ordem de Serviço - ${escapeHtml(service.cliente)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -95,15 +106,15 @@ export const generateServicePDF = (service: Service) => {
     <h3>👤 Dados do Cliente</h3>
     <div class="row">
       <span class="label">Cliente:</span>
-      <span class="value">${service.cliente || 'Não informado'}</span>
+      <span class="value">${escapeHtml(service.cliente) || 'Não informado'}</span>
     </div>
     <div class="row">
       <span class="label">Veículo:</span>
-      <span class="value">${service.veiculo || 'Não informado'}</span>
+      <span class="value">${escapeHtml(service.veiculo) || 'Não informado'}</span>
     </div>
     <div class="row">
       <span class="label">Placa:</span>
-      <span class="value">${service.placa || 'Não informada'}</span>
+      <span class="value">${escapeHtml(service.placa) || 'Não informada'}</span>
     </div>
   </div>
   
@@ -111,7 +122,7 @@ export const generateServicePDF = (service: Service) => {
     <h3>🛠️ Detalhes do Serviço</h3>
     <div class="row">
       <span class="label">Serviço:</span>
-      <span class="value">${service.servico || 'Não informado'}</span>
+      <span class="value">${escapeHtml(service.servico) || 'Não informado'}</span>
     </div>
     <div class="row">
       <span class="label">Data:</span>
@@ -121,7 +132,7 @@ export const generateServicePDF = (service: Service) => {
       <span class="label">Status:</span>
       <span class="value">
         <span class="status ${service.status === 'Concluído' ? 'status-concluido' : 'status-andamento'}">
-          ${service.status}
+          ${escapeHtml(service.status)}
         </span>
       </span>
     </div>
@@ -228,11 +239,11 @@ export const generateMonthlyPDF = (services: Service[], month: string) => {
   const servicesRows = services.map((service, index) => `
     <tr>
       <td>${index + 1}</td>
-      <td>${service.cliente}</td>
-      <td>${service.veiculo} - ${service.placa || 'S/P'}</td>
-      <td>${service.servico}</td>
+      <td>${escapeHtml(service.cliente)}</td>
+      <td>${escapeHtml(service.veiculo)} - ${escapeHtml(service.placa) || 'S/P'}</td>
+      <td>${escapeHtml(service.servico)}</td>
       <td>${formatDate(service.data_servico)}</td>
-      <td><span class="status ${service.status === 'Concluído' ? 'status-concluido' : 'status-andamento'}">${service.status}</span></td>
+      <td><span class="status ${service.status === 'Concluído' ? 'status-concluido' : 'status-andamento'}">${escapeHtml(service.status)}</span></td>
       <td>${formatCurrency(service.valor_mao_obra)}</td>
     </tr>
   `).join('');
