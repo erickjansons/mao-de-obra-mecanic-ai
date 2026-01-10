@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { User, Settings, Calendar, Edit, Trash2, CheckCircle, RotateCcw } from 'lucide-react';
+import { User, Settings, Calendar, Edit, Trash2, CheckCircle, RotateCcw, FileText, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Service } from '@/types/service';
 import { cn } from '@/lib/utils';
+import { generateServicePDF, shareOnWhatsApp } from '@/utils/pdfGenerator';
 
 interface ServiceCardProps {
   service: Service;
@@ -204,6 +205,20 @@ export const ServiceCard = ({ service, onToggleStatus, onUpdate, onDelete }: Ser
         >
           <Edit className="w-4 h-4 mr-2" />
           Editar
+        </Button>
+        <Button
+          onClick={() => generateServicePDF(service)}
+          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-500/90 hover:to-cyan-500/90"
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          PDF
+        </Button>
+        <Button
+          onClick={() => shareOnWhatsApp(service)}
+          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-500/90 hover:to-emerald-600/90"
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          WhatsApp
         </Button>
         <Button
           onClick={() => onDelete(service.id)}
