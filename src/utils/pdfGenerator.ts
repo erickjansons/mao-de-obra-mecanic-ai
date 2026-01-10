@@ -170,8 +170,51 @@ _Oficina Mecânica_
   `.trim();
 
   const encodedMessage = encodeURIComponent(message);
-  const whatsappUrl = phoneNumber 
-    ? `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+  const phone = phoneNumber || localStorage.getItem('oficina_whatsapp_phone') || '';
+  const whatsappUrl = phone 
+    ? `https://wa.me/${phone}?text=${encodedMessage}`
+    : `https://wa.me/?text=${encodedMessage}`;
+  
+  window.open(whatsappUrl, '_blank');
+};
+
+export const shareMonthlyServicesOnWhatsApp = (services: Service[], month: string) => {
+  const totalValue = services.reduce((sum, s) => sum + s.valor_mao_obra, 0);
+  const completed = services.filter(s => s.status === 'Concluído').length;
+  const inProgress = services.filter(s => s.status === 'Em Andamento').length;
+  
+  let message = `
+📊 *RELATÓRIO MENSAL*
+━━━━━━━━━━━━━━━━━━
+📅 *Mês:* ${month || 'Todos'}
+
+📈 *Estatísticas:*
+• Total de serviços: ${services.length}
+• Concluídos: ${completed}
+• Em andamento: ${inProgress}
+💰 *Valor Total:* ${formatCurrency(totalValue)}
+
+━━━━━━━━━━━━━━━━━━
+📋 *SERVIÇOS:*
+`;
+
+  services.forEach((service, index) => {
+    message += `
+${index + 1}. ${service.cliente}
+   🚗 ${service.veiculo} | ${service.placa || 'S/P'}
+   🛠️ ${service.servico}
+   💰 ${formatCurrency(service.valor_mao_obra)}
+`;
+  });
+
+  message += `
+━━━━━━━━━━━━━━━━━━
+_Oficina Mecânica_`;
+
+  const encodedMessage = encodeURIComponent(message.trim());
+  const phone = localStorage.getItem('oficina_whatsapp_phone') || '';
+  const whatsappUrl = phone 
+    ? `https://wa.me/${phone}?text=${encodedMessage}`
     : `https://wa.me/?text=${encodedMessage}`;
   
   window.open(whatsappUrl, '_blank');
