@@ -6,6 +6,7 @@ import { ServiceCard } from './ServiceCard';
 import { ServiceFilters } from './ServiceFilters';
 import { FilterSummary } from './FilterSummary';
 import { shareMonthlyServicesOnWhatsApp, generateMonthlyPDF } from '@/utils/pdfGenerator';
+import { WhatsAppDialog } from './WhatsAppDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +65,7 @@ export const ServiceList = ({
   onSwitchToNew,
 }: ServiceListProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   
   const hasFilters = searchTerm || selectedMonth || selectedStatus;
 
@@ -74,8 +76,8 @@ export const ServiceList = ({
     }
   };
 
-  const handleSendAllWhatsApp = () => {
-    shareMonthlyServicesOnWhatsApp(filteredServices, selectedMonth || 'Todos');
+  const handleWhatsAppConfirm = (phone: string) => {
+    shareMonthlyServicesOnWhatsApp(filteredServices, selectedMonth || 'Todos', phone);
   };
 
   const handleGenerateAllPDF = () => {
@@ -140,7 +142,7 @@ export const ServiceList = ({
                   </Button>
                   <Button
                     size="sm"
-                    onClick={handleSendAllWhatsApp}
+                    onClick={() => setShowWhatsAppDialog(true)}
                     className="bg-success hover:bg-success/80"
                   >
                     <Send className="w-4 h-4 mr-1" />
@@ -197,6 +199,13 @@ export const ServiceList = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* WhatsApp Dialog */}
+      <WhatsAppDialog
+        open={showWhatsAppDialog}
+        onOpenChange={setShowWhatsAppDialog}
+        onConfirm={handleWhatsAppConfirm}
+      />
     </div>
   );
 };

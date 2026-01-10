@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Service } from '@/types/service';
 import { cn } from '@/lib/utils';
 import { generateServicePDF, shareOnWhatsApp } from '@/utils/pdfGenerator';
+import { WhatsAppDialog } from './WhatsAppDialog';
 
 interface ServiceCardProps {
   service: Service;
@@ -16,6 +17,7 @@ interface ServiceCardProps {
 
 export const ServiceCard = ({ service, onToggleStatus, onUpdate, onDelete }: ServiceCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   const [editData, setEditData] = useState({
     cliente: service.cliente,
     veiculo: service.veiculo,
@@ -51,6 +53,10 @@ export const ServiceCard = ({ service, onToggleStatus, onUpdate, onDelete }: Ser
       status: service.status,
     });
     setIsEditing(false);
+  };
+
+  const handleWhatsAppConfirm = (phone: string) => {
+    shareOnWhatsApp(service, phone);
   };
 
   if (isEditing) {
@@ -135,98 +141,106 @@ export const ServiceCard = ({ service, onToggleStatus, onUpdate, onDelete }: Ser
   }
 
   return (
-    <div className="px-6 py-4 hover:bg-secondary/30 transition-colors duration-200 animate-fade-in-scale">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center flex-shrink-0">
-            <User className="w-5 h-5 text-white" />
+    <>
+      <div className="px-6 py-4 hover:bg-secondary/30 transition-colors duration-200 animate-fade-in-scale">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">{service.cliente || 'Cliente não informado'}</h3>
+              <p className="text-sm text-muted-foreground">
+                {service.veiculo || 'Veículo não informado'} {service.placa ? `• ${service.placa}` : ''}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">{service.cliente || 'Cliente não informado'}</h3>
-            <p className="text-sm text-muted-foreground">
-              {service.veiculo || 'Veículo não informado'} {service.placa ? `• ${service.placa}` : ''}
-            </p>
-          </div>
-        </div>
-        <span className={cn(
-          "px-3 py-1 text-xs font-medium rounded-full border flex-shrink-0",
-          service.status === 'Concluído'
-            ? "bg-success/20 text-success border-success/30"
-            : "bg-warning/20 text-warning border-warning/30"
-        )}>
-          {service.status}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Settings className="w-4 h-4" />
-            <span className="font-medium">Serviço:</span> {service.servico || 'Serviço não informado'}
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="w-4 h-4" />
-            <span className="font-medium">Data:</span> {formatDate(service.data_servico)}
-          </div>
-        </div>
-        <div className="flex items-center justify-end">
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground mb-1">Valor da Mão de Obra</p>
-            <p className="text-2xl font-bold text-success">R$ {(service.valor_mao_obra || 0).toFixed(2)}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          onClick={() => onToggleStatus(service.id)}
-          className={cn(
-            "flex-1 min-w-0",
+          <span className={cn(
+            "px-3 py-1 text-xs font-medium rounded-full border flex-shrink-0",
             service.status === 'Concluído'
-              ? "bg-gradient-to-r from-warning to-orange-500 hover:from-warning/90 hover:to-orange-500/90"
-              : "bg-gradient-to-r from-success to-emerald-500 hover:from-success/90 hover:to-emerald-500/90"
-          )}
-        >
-          {service.status === 'Concluído' ? (
-            <>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reabrir
-            </>
-          ) : (
-            <>
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Concluir
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={() => setIsEditing(true)}
-          className="bg-gradient-to-r from-accent to-purple-500 hover:from-accent/90 hover:to-purple-500/90"
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          Editar
-        </Button>
-        <Button
-          onClick={() => generateServicePDF(service)}
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-500/90 hover:to-cyan-500/90"
-        >
-          <FileText className="w-4 h-4 mr-2" />
-          PDF
-        </Button>
-        <Button
-          onClick={() => shareOnWhatsApp(service)}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-500/90 hover:to-emerald-600/90"
-        >
-          <MessageCircle className="w-4 h-4 mr-2" />
-          WhatsApp
-        </Button>
-        <Button
-          onClick={() => onDelete(service.id)}
-          variant="destructive"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+              ? "bg-success/20 text-success border-success/30"
+              : "bg-warning/20 text-warning border-warning/30"
+          )}>
+            {service.status}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Settings className="w-4 h-4" />
+              <span className="font-medium">Serviço:</span> {service.servico || 'Serviço não informado'}
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">Data:</span> {formatDate(service.data_servico)}
+            </div>
+          </div>
+          <div className="flex items-center justify-end">
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground mb-1">Valor da Mão de Obra</p>
+              <p className="text-2xl font-bold text-success">R$ {(service.valor_mao_obra || 0).toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => onToggleStatus(service.id)}
+            className={cn(
+              "flex-1 min-w-0",
+              service.status === 'Concluído'
+                ? "bg-gradient-to-r from-warning to-orange-500 hover:from-warning/90 hover:to-orange-500/90"
+                : "bg-gradient-to-r from-success to-emerald-500 hover:from-success/90 hover:to-emerald-500/90"
+            )}
+          >
+            {service.status === 'Concluído' ? (
+              <>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reabrir
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Concluir
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => setIsEditing(true)}
+            className="bg-gradient-to-r from-accent to-purple-500 hover:from-accent/90 hover:to-purple-500/90"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Editar
+          </Button>
+          <Button
+            onClick={() => generateServicePDF(service)}
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-500/90 hover:to-cyan-500/90"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            PDF
+          </Button>
+          <Button
+            onClick={() => setShowWhatsAppDialog(true)}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-500/90 hover:to-emerald-600/90"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            WhatsApp
+          </Button>
+          <Button
+            onClick={() => onDelete(service.id)}
+            variant="destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <WhatsAppDialog
+        open={showWhatsAppDialog}
+        onOpenChange={setShowWhatsAppDialog}
+        onConfirm={handleWhatsAppConfirm}
+      />
+    </>
   );
 };
