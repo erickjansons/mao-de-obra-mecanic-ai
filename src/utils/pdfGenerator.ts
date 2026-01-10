@@ -219,3 +219,166 @@ _Oficina Mecânica_`;
   
   window.open(whatsappUrl, '_blank');
 };
+
+export const generateMonthlyPDF = (services: Service[], month: string) => {
+  const totalValue = services.reduce((sum, s) => sum + s.valor_mao_obra, 0);
+  const completed = services.filter(s => s.status === 'Concluído').length;
+  const inProgress = services.filter(s => s.status === 'Em Andamento').length;
+  
+  const servicesRows = services.map((service, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${service.cliente}</td>
+      <td>${service.veiculo} - ${service.placa || 'S/P'}</td>
+      <td>${service.servico}</td>
+      <td>${formatDate(service.data_servico)}</td>
+      <td><span class="status ${service.status === 'Concluído' ? 'status-concluido' : 'status-andamento'}">${service.status}</span></td>
+      <td>${formatCurrency(service.valor_mao_obra)}</td>
+    </tr>
+  `).join('');
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório Mensal - ${month || 'Todos'}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Arial, sans-serif; 
+      padding: 30px; 
+      background: #fff;
+      color: #1a1a2e;
+      font-size: 12px;
+    }
+    .header { 
+      text-align: center; 
+      margin-bottom: 20px; 
+      padding-bottom: 15px;
+      border-bottom: 3px solid #3b82f6;
+    }
+    .header h1 { 
+      color: #3b82f6; 
+      font-size: 24px; 
+      margin-bottom: 5px;
+    }
+    .header p { color: #666; font-size: 12px; }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+    .stat-card {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      flex: 1;
+      border-left: 4px solid #3b82f6;
+    }
+    .stat-card h3 { color: #3b82f6; font-size: 20px; margin-bottom: 5px; }
+    .stat-card p { color: #666; font-size: 11px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    th {
+      background: #3b82f6;
+      color: white;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    tr:nth-child(even) { background: #f8fafc; }
+    .status { 
+      display: inline-block; 
+      padding: 4px 10px; 
+      border-radius: 12px; 
+      font-size: 10px; 
+      font-weight: 600;
+    }
+    .status-concluido { background: #22c55e20; color: #22c55e; }
+    .status-andamento { background: #f59e0b20; color: #f59e0b; }
+    .total { 
+      text-align: right; 
+      padding: 15px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border-radius: 8px;
+    }
+    .total h2 { font-size: 22px; }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Relatório Mensal</h1>
+    <p>Oficina Mecânica - ${month || 'Todos os Meses'}</p>
+  </div>
+  
+  <div class="stats">
+    <div class="stat-card">
+      <h3>${services.length}</h3>
+      <p>Total de Serviços</p>
+    </div>
+    <div class="stat-card">
+      <h3>${completed}</h3>
+      <p>Concluídos</p>
+    </div>
+    <div class="stat-card">
+      <h3>${inProgress}</h3>
+      <p>Em Andamento</p>
+    </div>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Cliente</th>
+        <th>Veículo</th>
+        <th>Serviço</th>
+        <th>Data</th>
+        <th>Status</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${servicesRows}
+    </tbody>
+  </table>
+  
+  <div class="total">
+    <p style="margin-bottom: 5px; opacity: 0.9;">Valor Total</p>
+    <h2>${formatCurrency(totalValue)}</h2>
+  </div>
+  
+  <div class="footer">
+    <p>Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+  </div>
+</body>
+</html>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  }
+};
