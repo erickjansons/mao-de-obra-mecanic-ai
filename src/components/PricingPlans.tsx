@@ -206,8 +206,8 @@ export const PricingPlans = () => {
               >
                 {/* Animated background gradient */}
                 <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} opacity-0`}
-                  animate={{ opacity: isHovered ? 1 : 0 }}
+                  className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} opacity-0 pointer-events-none`}
+                  animate={{ opacity: isHovered ? 0.5 : 0 }}
                   transition={{ duration: 0.3 }}
                 />
 
