@@ -73,7 +73,9 @@ serve(async (req) => {
           const priceId = subscription.items.data[0].price.id;
           
           // Determine plan type based on price ID
-          const planType = priceId === "price_1SotWhRrRAPetjIvH88yq44x" ? "monthly" : "annual";
+          // Monthly: price_1SouFjRrRAPetjIvCxj0uasa
+          // Annual/Economico: price_1SotyCRrRAPetjIvsIUjFjfT
+          const planType = priceId === "price_1SouFjRrRAPetjIvCxj0uasa" ? "monthly" : "annual";
 
           console.log("Updating subscription for user:", userId, "plan:", planType);
 
