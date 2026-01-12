@@ -88,18 +88,17 @@ export const PricingPlans = () => {
       priceId: PLAN_PRICES.monthly.id,
     },
     {
-      name: 'Anual',
+      name: 'Econômico',
       key: 'annual',
       price: 'R$ 10,90',
       period: '/mês',
-      annualTotal: 'R$ 130,80/ano',
       description: 'Melhor custo-benefício',
       features: [
         'Serviços ilimitados',
         'Geração de PDF',
         'Envio via WhatsApp',
         'Suporte prioritário',
-        'Economia de 42%',
+        '42% mais barato que o Mensal',
       ],
       icon: Crown,
       popular: true,
@@ -273,15 +272,6 @@ export const PricingPlans = () => {
                       {plan.price}
                     </span>
                     <span className="text-muted-foreground text-lg">{plan.period}</span>
-                    {plan.annualTotal && (
-                      <motion.p 
-                        className="text-sm text-muted-foreground mt-1"
-                        animate={{ opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {plan.annualTotal}
-                      </motion.p>
-                    )}
                   </motion.div>
                   
                   <ul className="space-y-3 text-sm text-left">

@@ -33,8 +33,9 @@ export const PLAN_PRICES = {
   annual: {
     id: 'price_1SotyCRrRAPetjIvsIUjFjfT',
     productId: 'prod_TmStifjqyW0r4D',
-    amount: 13080,
-    display: 'R$ 130,80/ano (R$ 10,90/mês)',
+    amount: 1090,
+    display: 'R$ 10,90/mês',
+    savings: '42% de economia vs mensal',
   },
 };
 
