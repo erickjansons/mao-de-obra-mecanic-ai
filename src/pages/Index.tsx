@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { TabNavigation, TabType } from '@/components/TabNavigation';
 import { Dashboard } from '@/components/Dashboard';
 import { ServiceForm } from '@/components/ServiceForm';
 import { ServiceList } from '@/components/ServiceList';
+import { PricingPlans } from '@/components/PricingPlans';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
 import { useAuth } from '@/hooks/useAuth';
-
+import { useSubscription } from '@/hooks/useSubscription';
+import { useToast } from '@/hooks/use-toast';
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const { canAddService, getServiceLimit, isPremium, refetch: refetchSubscription } = useSubscription();
   
   const {
     services,
@@ -42,6 +48,42 @@ const Index = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Handle Stripe redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast({
+        title: 'Assinatura realizada!',
+        description: 'Sua assinatura foi ativada com sucesso.',
+      });
+      refetchSubscription();
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+    } else if (canceled === 'true') {
+      toast({
+        title: 'Checkout cancelado',
+        description: 'O processo de pagamento foi cancelado.',
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, '', '/');
+    }
+  }, [searchParams, toast, refetchSubscription]);
+
+  const handleAddService = (service: Parameters<typeof addService>[0]) => {
+    if (!canAddService(services.length)) {
+      toast({
+        title: 'Limite atingido',
+        description: 'Você atingiu o limite de serviços do plano gratuito. Faça upgrade para continuar.',
+        variant: 'destructive',
+      });
+      setActiveTab('planos');
+      return;
+    }
+    addService(service);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -61,14 +103,32 @@ const Index = () => {
       
       <main className="px-3 py-4">
         {activeTab === 'dashboard' && (
-          <Dashboard stats={stats} services={services} />
+          <>
+            {!isPremium() && (
+              <UpgradePrompt 
+                currentCount={services.length} 
+                limit={getServiceLimit()} 
+                onUpgrade={() => setActiveTab('planos')} 
+              />
+            )}
+            <Dashboard stats={stats} services={services} />
+          </>
         )}
         
         {activeTab === 'novo' && (
-          <ServiceForm 
-            onSubmit={addService} 
-            onSuccess={() => setActiveTab('dashboard')}
-          />
+          <>
+            {!isPremium() && (
+              <UpgradePrompt 
+                currentCount={services.length} 
+                limit={getServiceLimit()} 
+                onUpgrade={() => setActiveTab('planos')} 
+              />
+            )}
+            <ServiceForm 
+              onSubmit={handleAddService} 
+              onSuccess={() => setActiveTab('dashboard')}
+            />
+          </>
         )}
         
         {activeTab === 'lista' && (
@@ -92,6 +152,10 @@ const Index = () => {
             filteredStats={filteredStats}
             onSwitchToNew={() => setActiveTab('novo')}
           />
+        )}
+
+        {activeTab === 'planos' && (
+          <PricingPlans />
         )}
       </main>
     </div>
