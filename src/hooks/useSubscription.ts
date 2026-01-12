@@ -25,12 +25,14 @@ export const PLAN_LIMITS = {
 
 export const PLAN_PRICES = {
   monthly: {
-    id: 'price_1SotWhRrRAPetjIvH88yq44x',
+    id: 'price_1Sou1VRrRAPetjIv5VSzNCfL',
+    productId: 'prod_TmSxtzL31HcVU5',
     amount: 1890,
     display: 'R$ 18,90/mês',
   },
   annual: {
-    id: 'price_1SotXcRrRAPetjIvNqVwieFh',
+    id: 'price_1SotyCRrRAPetjIvsIUjFjfT',
+    productId: 'prod_TmStifjqyW0r4D',
     amount: 13080,
     display: 'R$ 130,80/ano (R$ 10,90/mês)',
   },
