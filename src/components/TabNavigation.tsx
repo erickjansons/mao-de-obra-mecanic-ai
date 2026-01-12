@@ -1,7 +1,7 @@
-import { LayoutDashboard, Plus, List } from 'lucide-react';
+import { LayoutDashboard, Plus, List, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type TabType = 'dashboard' | 'novo' | 'lista';
+export type TabType = 'dashboard' | 'novo' | 'lista' | 'planos';
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -12,6 +12,7 @@ const tabs = [
   { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
   { id: 'novo' as TabType, label: 'Novo', icon: Plus },
   { id: 'lista' as TabType, label: 'Lista', icon: List },
+  { id: 'planos' as TabType, label: 'Planos', icon: Crown },
 ];
 
 export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
