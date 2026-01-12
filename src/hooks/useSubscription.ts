@@ -25,8 +25,8 @@ export const PLAN_LIMITS = {
 
 export const PLAN_PRICES = {
   monthly: {
-    id: 'price_1Sou1VRrRAPetjIv5VSzNCfL',
-    productId: 'prod_TmSxtzL31HcVU5',
+    id: 'price_1SouFjRrRAPetjIvCxj0uasa',
+    productId: 'prod_TmTCIVDzGnReJM',
     amount: 1890,
     display: 'R$ 18,90/mês',
   },
