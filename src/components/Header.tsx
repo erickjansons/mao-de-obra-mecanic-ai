@@ -1,5 +1,6 @@
 import logo from '@/assets/logo.png';
 import { UserMenu } from './UserMenu';
+import { DownloadTutorialDialog } from './DownloadTutorialDialog';
 
 export const Header = () => {
   return (
@@ -19,7 +20,10 @@ export const Header = () => {
               <p className="text-muted-foreground text-sm">Oficina Mecânica</p>
             </div>
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-2">
+            <DownloadTutorialDialog />
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>
