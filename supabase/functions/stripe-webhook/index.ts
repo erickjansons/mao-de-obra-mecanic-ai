@@ -2,14 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
-};
+// No CORS headers needed for server-to-server webhook communication
+// Stripe webhooks are server-to-server and don't require CORS
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  // Webhooks are POST only - reject other methods
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -31,26 +33,25 @@ serve(async (req) => {
     if (webhookSecret && signature) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } else {
-      // For testing without webhook signature
+      // For testing without webhook signature - log warning without sensitive details
       event = JSON.parse(body);
-      console.log("Warning: Webhook signature not verified (no secret configured)");
+      console.log("Warning: Webhook signature not verified");
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Webhook signature verification failed:", message);
+    console.error("Webhook signature verification failed");
     return new Response(JSON.stringify({ error: "Webhook signature verification failed" }), {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   }
 
-  console.log("Received event:", event.type);
+  console.log("Processing webhook event");
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Checkout completed:", session.id);
+        console.log("Processing checkout completion");
 
         if (session.mode === "subscription" && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
@@ -65,7 +66,7 @@ serve(async (req) => {
             .limit(1);
 
           if (userError || !users || users.length === 0) {
-            console.error("Could not find user for email:", customer.email);
+            console.error("Could not find user for checkout");
             break;
           }
 
@@ -73,11 +74,9 @@ serve(async (req) => {
           const priceId = subscription.items.data[0].price.id;
           
           // Determine plan type based on price ID
-          // Monthly: price_1SouFjRrRAPetjIvCxj0uasa
-          // Annual/Economico: price_1SotyCRrRAPetjIvsIUjFjfT
           const planType = priceId === "price_1SouFjRrRAPetjIvCxj0uasa" ? "monthly" : "annual";
 
-          console.log("Updating subscription for user:", userId, "plan:", planType);
+          console.log("Updating subscription record");
 
           // Upsert subscription
           const { error: upsertError } = await supabase
@@ -93,7 +92,7 @@ serve(async (req) => {
             }, { onConflict: "user_id" });
 
           if (upsertError) {
-            console.error("Error upserting subscription:", upsertError);
+            console.error("Error upserting subscription record");
           } else {
             console.log("Subscription updated successfully");
           }
@@ -103,7 +102,7 @@ serve(async (req) => {
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log("Subscription updated:", subscription.id);
+        console.log("Processing subscription update");
 
         const { error: updateError } = await supabase
           .from("subscriptions")
@@ -115,14 +114,14 @@ serve(async (req) => {
           .eq("stripe_subscription_id", subscription.id);
 
         if (updateError) {
-          console.error("Error updating subscription:", updateError);
+          console.error("Error updating subscription record");
         }
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log("Subscription deleted:", subscription.id);
+        console.log("Processing subscription cancellation");
 
         const { error: updateError } = await supabase
           .from("subscriptions")
@@ -133,24 +132,23 @@ serve(async (req) => {
           .eq("stripe_subscription_id", subscription.id);
 
         if (updateError) {
-          console.error("Error updating subscription:", updateError);
+          console.error("Error updating subscription record");
         }
         break;
       }
 
       default:
-        console.log("Unhandled event type:", event.type);
+        console.log("Received unhandled event type");
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error processing webhook:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Error processing webhook");
+    return new Response(JSON.stringify({ error: "Webhook processing error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   }
 });
