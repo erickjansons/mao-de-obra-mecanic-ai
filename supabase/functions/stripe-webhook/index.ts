@@ -5,6 +5,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 // No CORS headers needed for server-to-server webhook communication
 // Stripe webhooks are server-to-server and don't require CORS
 
+// Define allowed price IDs with their corresponding plan types
+const ALLOWED_PRICES: Record<string, 'monthly' | 'annual'> = {
+  'price_1SouFjRrRAPetjIvCxj0uasa': 'monthly',
+  'price_1SotyCRrRAPetjIvsIUjFjfT': 'annual'
+};
+
 serve(async (req) => {
   // Webhooks are POST only - reject other methods
   if (req.method !== "POST") {
@@ -29,17 +35,20 @@ serve(async (req) => {
 
   let event: Stripe.Event;
 
+  // SECURITY: Always require webhook signature verification - no unsafe fallback
+  if (!webhookSecret || !signature) {
+    console.error("Missing webhook secret or signature");
+    return new Response(JSON.stringify({ error: "Webhook signature required" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    if (webhookSecret && signature) {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      // For testing without webhook signature - log warning without sensitive details
-      event = JSON.parse(body);
-      console.log("Warning: Webhook signature not verified");
-    }
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error("Webhook signature verification failed");
-    return new Response(JSON.stringify({ error: "Webhook signature verification failed" }), {
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
@@ -58,6 +67,37 @@ serve(async (req) => {
           const customerId = session.customer as string;
           const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
           
+          // Validate customer email exists
+          if (!customer.email) {
+            console.error("Customer has no email");
+            return new Response(JSON.stringify({ error: "Invalid customer data" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // Validate subscription items exist
+          const items = subscription.items?.data;
+          if (!items || items.length === 0) {
+            console.error("No subscription items found");
+            return new Response(JSON.stringify({ error: "Invalid subscription data" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          const priceId = items[0].price.id;
+          
+          // Validate price ID is in allowed list
+          const planType = ALLOWED_PRICES[priceId];
+          if (!planType) {
+            console.error("Unauthorized price ID received");
+            return new Response(JSON.stringify({ error: "Invalid price" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           // Get user by email
           const { data: users, error: userError } = await supabase
             .from("profiles")
@@ -71,10 +111,6 @@ serve(async (req) => {
           }
 
           const userId = users[0].user_id;
-          const priceId = subscription.items.data[0].price.id;
-          
-          // Determine plan type based on price ID
-          const planType = priceId === "price_1SouFjRrRAPetjIvCxj0uasa" ? "monthly" : "annual";
 
           console.log("Updating subscription record");
 
