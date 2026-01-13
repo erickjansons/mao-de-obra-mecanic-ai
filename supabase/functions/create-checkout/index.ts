@@ -2,12 +2,29 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    Deno.env.get("SITE_URL") || "",
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ].filter(Boolean);
+  
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  // Default to first allowed origin or empty for no match
+  return allowedOrigins[0] || "";
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,7 +46,7 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      console.error("Auth error:", userError);
+      console.error("Auth error occurred");
       return new Response(JSON.stringify({ error: "Unauthorized" }), { 
         status: 401, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -47,7 +64,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("Creating checkout for user:", userId, "email:", email, "priceId:", priceId);
+    console.log("Creating checkout session");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2023-10-16",
@@ -59,14 +76,14 @@ serve(async (req) => {
 
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      console.log("Found existing customer:", customerId);
+      console.log("Found existing customer");
     } else {
       const customer = await stripe.customers.create({
         email: email!,
         metadata: { user_id: userId },
       });
       customerId = customer.id;
-      console.log("Created new customer:", customerId);
+      console.log("Created new customer");
     }
 
     // Create checkout session
@@ -79,15 +96,14 @@ serve(async (req) => {
       metadata: { user_id: userId },
     });
 
-    console.log("Created checkout session:", session.id);
+    console.log("Checkout session created successfully");
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error creating checkout:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Error creating checkout session");
+    return new Response(JSON.stringify({ error: "An error occurred while creating checkout" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
