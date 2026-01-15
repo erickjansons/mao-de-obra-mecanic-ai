@@ -47,13 +47,16 @@ serve(async (req) => {
     const userId = user.id;
     const email = user.email;
 
-    const { priceId } = await req.json();
+    const { priceId, mode } = await req.json();
     if (!priceId) {
       return new Response(JSON.stringify({ error: "Price ID is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Validate mode - default to subscription for backwards compatibility
+    const checkoutMode = mode === "payment" ? "payment" : "subscription";
 
     const baseUrl = origin || Deno.env.get("SITE_URL") || "";
     if (!baseUrl) {
@@ -89,13 +92,13 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
+      mode: checkoutMode,
       success_url: `${baseUrl}/?success=true`,
       cancel_url: `${baseUrl}/?canceled=true`,
       metadata: { user_id: userId },
     });
 
-    console.log("Checkout session created successfully");
+    console.log(`Checkout session created successfully (mode: ${checkoutMode})`);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

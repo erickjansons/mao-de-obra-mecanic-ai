@@ -16,10 +16,10 @@ export const PricingPlans = () => {
   const navigate = useNavigate();
   const currentPlan = getPlanType();
 
-  const handleSubscribe = async (priceId: string, planName: string) => {
+  const handleSubscribe = async (priceId: string, planName: string, mode: 'payment' | 'subscription') => {
     setLoadingPlan(planName);
     try {
-      const url = await createCheckout(priceId);
+      const url = await createCheckout(priceId, mode);
       if (url) {
         window.location.href = url;
       }
@@ -93,8 +93,8 @@ export const PricingPlans = () => {
       name: 'Mensal',
       key: 'monthly',
       price: 'R$ 18,90',
-      period: '/mês',
-      description: 'Para profissionais',
+      period: '',
+      description: 'Pagamento único',
       features: [
         'Serviços ilimitados',
         'Geração de PDF',
@@ -106,6 +106,7 @@ export const PricingPlans = () => {
       gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30',
       priceId: PLAN_PRICES.monthly.id,
+      mode: PLAN_PRICES.monthly.mode,
     },
     {
       name: 'Econômico',
@@ -125,6 +126,7 @@ export const PricingPlans = () => {
       gradient: 'from-violet-500 to-purple-600',
       bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-900/30 dark:to-purple-900/30',
       priceId: PLAN_PRICES.annual.id,
+      mode: PLAN_PRICES.annual.mode,
     },
   ];
 
@@ -342,7 +344,7 @@ export const PricingPlans = () => {
                     >
                       <Button 
                         className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-5 shadow-lg transition-all duration-300`}
-                        onClick={() => handleSubscribe(plan.priceId!, plan.key)}
+                        onClick={() => handleSubscribe(plan.priceId!, plan.key, plan.mode!)}
                         disabled={loadingPlan === plan.key}
                       >
                         {loadingPlan === plan.key ? (
