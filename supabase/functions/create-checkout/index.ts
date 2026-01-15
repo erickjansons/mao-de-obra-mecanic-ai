@@ -2,19 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const getAllowedOrigin = (requestOrigin: string | null): string => {
-  const allowedOrigins = [
-    Deno.env.get("SITE_URL") || "",
-    "http://localhost:8080",
-    "http://localhost:5173",
-    "http://localhost:3000",
-  ].filter(Boolean);
-  
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-    return requestOrigin;
-  }
-  // Default to first allowed origin or empty for no match
-  return allowedOrigins[0] || "";
+const getAllowedOrigin = (_requestOrigin: string | null): string => {
+  // We use a permissive CORS policy because this endpoint is still protected by
+  // Bearer auth (Authorization header) and does not rely on cookies.
+  return "*";
 };
 
 serve(async (req) => {
@@ -22,7 +13,7 @@ serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": getAllowedOrigin(origin),
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
   if (req.method === "OPTIONS") {
