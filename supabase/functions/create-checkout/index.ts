@@ -49,9 +49,17 @@ serve(async (req) => {
 
     const { priceId } = await req.json();
     if (!priceId) {
-      return new Response(JSON.stringify({ error: "Price ID is required" }), { 
-        status: 400, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      return new Response(JSON.stringify({ error: "Price ID is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const baseUrl = origin || Deno.env.get("SITE_URL") || "";
+    if (!baseUrl) {
+      return new Response(JSON.stringify({ error: "Missing origin/site URL" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -82,8 +90,8 @@ serve(async (req) => {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/?success=true`,
-      cancel_url: `${req.headers.get("origin")}/?canceled=true`,
+      success_url: `${baseUrl}/?success=true`,
+      cancel_url: `${baseUrl}/?canceled=true`,
       metadata: { user_id: userId },
     });
 
@@ -93,10 +101,25 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error creating checkout session");
-    return new Response(JSON.stringify({ error: "An error occurred while creating checkout" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const err = error as any;
+    console.error(
+      "Error creating checkout session:",
+      err?.message ?? err,
+      { type: err?.type, code: err?.code, requestId: err?.requestId }
+    );
+
+    return new Response(
+      JSON.stringify({
+        error: "checkout_failed",
+        message: err?.message ?? "Unknown error",
+        code: err?.code ?? null,
+        type: err?.type ?? null,
+        requestId: err?.requestId ?? null,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });
