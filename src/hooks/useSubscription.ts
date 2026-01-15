@@ -97,9 +97,12 @@ export const useSubscription = () => {
 
   const createCheckout = async (priceId: string): Promise<string | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No session');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        // Session expired or invalid - sign out and throw specific error
+        await supabase.auth.signOut();
+        throw new Error('SESSION_EXPIRED');
       }
 
       const response = await supabase.functions.invoke('create-checkout', {
@@ -107,6 +110,11 @@ export const useSubscription = () => {
       });
 
       if (response.error) {
+        // Check if it's an auth error from the edge function
+        if (response.error.message?.includes('Unauthorized') || response.error.status === 401) {
+          await supabase.auth.signOut();
+          throw new Error('SESSION_EXPIRED');
+        }
         throw response.error;
       }
 
@@ -119,14 +127,20 @@ export const useSubscription = () => {
 
   const openPortal = async (): Promise<string | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No session');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        await supabase.auth.signOut();
+        throw new Error('SESSION_EXPIRED');
       }
 
       const response = await supabase.functions.invoke('create-portal-session');
 
       if (response.error) {
+        if (response.error.message?.includes('Unauthorized') || response.error.status === 401) {
+          await supabase.auth.signOut();
+          throw new Error('SESSION_EXPIRED');
+        }
         throw response.error;
       }
 
