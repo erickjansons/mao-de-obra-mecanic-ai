@@ -25,10 +25,11 @@ export const PLAN_LIMITS = {
 
 export const PLAN_PRICES = {
   monthly: {
-    id: 'price_1SouFjRrRAPetjIvCxj0uasa',
-    productId: 'prod_TmTCIVDzGnReJM',
+    id: 'price_1Sou1VRrRAPetjIv5VSzNCfL',
+    productId: 'prod_TmSxtzL31HcVU5',
     amount: 1890,
-    display: 'R$ 18,90/mês',
+    display: 'R$ 18,90',
+    mode: 'payment' as const, // one-time payment
   },
   annual: {
     id: 'price_1SotyCRrRAPetjIvsIUjFjfT',
@@ -36,6 +37,7 @@ export const PLAN_PRICES = {
     amount: 1090,
     display: 'R$ 10,90/mês',
     savings: '42% de economia vs mensal',
+    mode: 'subscription' as const, // recurring
   },
 };
 
@@ -95,7 +97,7 @@ export const useSubscription = () => {
     return planType === 'monthly' || planType === 'annual';
   };
 
-  const createCheckout = async (priceId: string): Promise<string | null> => {
+  const createCheckout = async (priceId: string, mode: 'payment' | 'subscription' = 'subscription'): Promise<string | null> => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -106,7 +108,7 @@ export const useSubscription = () => {
       }
 
       const response = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
+        body: { priceId, mode },
       });
 
       if (response.error) {
