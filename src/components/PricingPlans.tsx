@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { useSubscription, PLAN_PRICES } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export const PricingPlans = () => {
   const { getPlanType, createCheckout, openPortal, isPremium } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const currentPlan = getPlanType();
 
   const handleSubscribe = async (priceId: string, planName: string) => {
@@ -21,13 +23,22 @@ export const PricingPlans = () => {
       if (url) {
         window.location.href = url;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível iniciar o checkout. Tente novamente.',
-        variant: 'destructive',
-      });
+      if (error?.message === 'SESSION_EXPIRED') {
+        toast({
+          title: 'Sessão expirada',
+          description: 'Por favor, faça login novamente para continuar.',
+          variant: 'destructive',
+        });
+        navigate('/auth');
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível iniciar o checkout. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoadingPlan(null);
     }
@@ -40,13 +51,22 @@ export const PricingPlans = () => {
       if (url) {
         window.location.href = url;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível abrir o portal. Tente novamente.',
-        variant: 'destructive',
-      });
+      if (error?.message === 'SESSION_EXPIRED') {
+        toast({
+          title: 'Sessão expirada',
+          description: 'Por favor, faça login novamente para continuar.',
+          variant: 'destructive',
+        });
+        navigate('/auth');
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível abrir o portal. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoadingPlan(null);
     }
