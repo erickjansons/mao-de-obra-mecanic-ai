@@ -44,8 +44,8 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
     },
     {
       icon: MessageCircle,
-      title: 'WhatsApp Integrado',
-      description: 'Envie orçamentos e recibos direto para o WhatsApp do cliente com um toque.',
+      title: 'Envio via WhatsApp',
+      description: 'Envie relatórios de serviços para você ou seu patrão e mantenha o controle total.',
     },
     {
       icon: Shield,
@@ -142,8 +142,128 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* App Demo Section */}
       <section className="py-16 sm:py-24 bg-secondary/30">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Veja como funciona
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Interface simples e intuitiva para você focar no que importa: seu trabalho.
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Dashboard Completo',
+                description: 'Visualize faturamento, serviços pendentes e estatísticas em tempo real.',
+                icon: BarChart3,
+                color: 'from-blue-500 to-cyan-500',
+              },
+              {
+                title: 'Cadastro Rápido',
+                description: 'Registre novos serviços em segundos com formulário otimizado.',
+                icon: Zap,
+                color: 'from-green-500 to-emerald-500',
+              },
+              {
+                title: 'Controle Total',
+                description: 'Filtre por data, status, cliente e exporte relatórios em PDF.',
+                icon: FileText,
+                color: 'from-violet-500 to-purple-500',
+              },
+            ].map((demo, index) => (
+              <motion.div
+                key={demo.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="relative group"
+              >
+                <div className="glass-effect rounded-2xl p-8 border border-border h-full flex flex-col items-center text-center hover-lift">
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${demo.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <demo.icon className="h-10 w-10 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{demo.title}</h3>
+                  <p className="text-muted-foreground">{demo.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          {/* Mock Phone Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="mt-16 flex justify-center"
+          >
+            <div className="relative">
+              <div className="w-72 h-[500px] bg-gradient-to-br from-card to-secondary rounded-[3rem] p-3 shadow-2xl border-4 border-border">
+                <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden relative">
+                  {/* Phone notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-border rounded-b-2xl" />
+                  
+                  {/* Mock app content */}
+                  <div className="pt-10 px-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
+                        <span className="font-bold text-sm">Dashboard</span>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-secondary" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-3 border border-green-500/30">
+                        <p className="text-xs text-muted-foreground">Faturamento</p>
+                        <p className="text-lg font-bold text-green-500">R$ 4.850</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-3 border border-blue-500/30">
+                        <p className="text-xs text-muted-foreground">Serviços</p>
+                        <p className="text-lg font-bold text-blue-500">12</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold">Recentes</p>
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-secondary/50 rounded-lg p-3 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                            <Wrench className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="h-3 bg-muted rounded w-24 mb-1" />
+                            <div className="h-2 bg-muted/50 rounded w-16" />
+                          </div>
+                          <div className="text-xs font-bold text-green-500">R$ {150 + i * 50}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-br from-accent/30 to-primary/30 rounded-full blur-2xl" />
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
