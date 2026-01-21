@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Wrench, 
@@ -80,79 +79,198 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
     },
   ];
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const floatAnimation = {
+    y: [0, -10, 0],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+    },
+  };
+
+  const pulseAnimation = {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+        {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
         
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        {/* Floating orbs */}
+        <motion.div 
+          className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"
+          animate={{ 
+            x: [0, 30, 0], 
+            y: [0, -20, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div 
+          className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl"
+          animate={{ 
+            x: [0, -30, 0], 
+            y: [0, 20, 0],
+            scale: [1.1, 1, 1.1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        
+        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24 w-full">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             className="text-center"
           >
-            <motion.img 
-              src={logo} 
-              alt="Logo Oficina" 
-              className="h-28 w-auto object-contain mx-auto mb-6"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            />
+            <motion.div
+              animate={floatAnimation}
+              className="inline-block"
+            >
+              <motion.img 
+                src={logo} 
+                alt="Logo Oficina" 
+                className="h-32 sm:h-40 w-auto object-contain mx-auto mb-8 drop-shadow-2xl"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 200, 
+                  damping: 15,
+                  delay: 0.2 
+                }}
+              />
+            </motion.div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            <motion.h1 
+              variants={itemVariants}
+              className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6"
+            >
+              <motion.span 
+                className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent inline-block"
+                animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+              >
                 Gerenciador de
-              </span>
+              </motion.span>
               <br />
               <span className="text-foreground">Mão de Obra</span>
-            </h1>
+            </motion.h1>
             
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            <motion.p 
+              variants={itemVariants}
+              className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            >
               A ferramenta completa para mecânicos e oficinas controlarem serviços, 
               clientes e faturamento de forma simples e profissional.
-            </p>
+            </motion.p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg"
-                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold px-8 py-6 text-lg shadow-lg"
-                onClick={onGetStarted}
-              >
-                Começar Grátis
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                className="px-8 py-6 text-lg border-2"
-                onClick={onGetStarted}
-              >
-                Já tenho conta
-              </Button>
-            </div>
+            <motion.div 
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-shadow"
+                  onClick={onGetStarted}
+                >
+                  Começar Grátis
+                  <motion.span
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </motion.span>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  className="px-8 py-6 text-lg border-2 hover:bg-primary/10"
+                  onClick={onGetStarted}
+                >
+                  Já tenho conta
+                </Button>
+              </motion.div>
+            </motion.div>
             
-            <p className="text-sm text-muted-foreground mt-4">
+            <motion.p 
+              variants={itemVariants}
+              className="text-sm text-muted-foreground mt-6"
+            >
               ✓ Grátis para começar • ✓ Sem cartão de crédito • ✓ Cancele quando quiser
-            </p>
+            </motion.p>
           </motion.div>
         </div>
+        
+        {/* Scroll indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <div className="w-6 h-10 border-2 border-muted-foreground/30 rounded-full flex justify-center pt-2">
+            <motion.div 
+              className="w-1.5 h-3 bg-primary rounded-full"
+              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* App Demo Section */}
-      <section className="py-16 sm:py-24 bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4">
+      <section className="py-20 sm:py-32 bg-secondary/30 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+        
+        <div className="max-w-7xl mx-auto px-4 relative">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <motion.span 
+              className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+            >
+              ✨ Demonstração
+            </motion.span>
+            <h2 className="text-3xl sm:text-5xl font-bold mb-4">
               Veja como funciona
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -160,105 +278,215 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Dashboard Completo',
-                description: 'Visualize faturamento, serviços pendentes e estatísticas em tempo real.',
-                icon: BarChart3,
-                color: 'from-blue-500 to-cyan-500',
-              },
-              {
-                title: 'Cadastro Rápido',
-                description: 'Registre novos serviços em segundos com formulário otimizado.',
-                icon: Zap,
-                color: 'from-green-500 to-emerald-500',
-              },
-              {
-                title: 'Controle Total',
-                description: 'Filtre por data, status, cliente e exporte relatórios em PDF.',
-                icon: FileText,
-                color: 'from-violet-500 to-purple-500',
-              },
-            ].map((demo, index) => (
-              <motion.div
-                key={demo.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.15 }}
-                className="relative group"
-              >
-                <div className="glass-effect rounded-2xl p-8 border border-border h-full flex flex-col items-center text-center hover-lift">
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${demo.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <demo.icon className="h-10 w-10 text-white" />
+          {/* Phone Mockup with Logo */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
+            {/* Left side features */}
+            <motion.div 
+              className="space-y-6 max-w-sm"
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              {[
+                { icon: BarChart3, title: 'Dashboard Completo', desc: 'Estatísticas em tempo real', color: 'from-primary to-accent' },
+                { icon: Zap, title: 'Cadastro Rápido', desc: 'Registre em segundos', color: 'from-success to-success' },
+                { icon: FileText, title: 'Relatórios PDF', desc: 'Exporte com um clique', color: 'from-warning to-warning' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  className="flex items-center gap-4 glass-effect rounded-xl p-4 border border-border"
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  whileHover={{ x: 10, transition: { duration: 0.2 } }}
+                >
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                    <item.icon className="h-6 w-6 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{demo.title}</h3>
-                  <p className="text-muted-foreground">{demo.description}</p>
+                  <div>
+                    <h4 className="font-semibold">{item.title}</h4>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            {/* Phone Mockup */}
+            <motion.div
+              initial={{ opacity: 0, y: 60, rotateY: -15 }}
+              whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, type: 'spring' }}
+              className="relative"
+              style={{ perspective: 1000 }}
+            >
+              <motion.div 
+                animate={floatAnimation}
+                className="relative z-10"
+              >
+                <div className="w-[280px] sm:w-[320px] h-[560px] sm:h-[640px] bg-gradient-to-br from-foreground/90 to-foreground rounded-[3rem] p-2 shadow-2xl">
+                  <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden relative">
+                    {/* Phone notch */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-foreground rounded-b-2xl z-20" />
+                    
+                    {/* Mock app content */}
+                    <div className="pt-12 px-4 space-y-4 h-full bg-gradient-to-b from-secondary/50 to-background">
+                      {/* Header with Logo */}
+                      <motion.div 
+                        className="flex items-center justify-between"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
+                          <span className="font-bold text-sm">Dashboard</span>
+                        </div>
+                        <motion.div 
+                          className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent"
+                          animate={pulseAnimation}
+                        />
+                      </motion.div>
+                      
+                      {/* Stats Cards */}
+                      <motion.div 
+                        className="grid grid-cols-2 gap-3"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.6 }}
+                      >
+                        <motion.div 
+                          className="bg-success/10 rounded-xl p-3 border border-success/30"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <p className="text-xs text-muted-foreground">Faturamento</p>
+                          <p className="text-xl font-bold text-success">R$ 4.850</p>
+                          <p className="text-xs text-success">+12% este mês</p>
+                        </motion.div>
+                        <motion.div 
+                          className="bg-primary/10 rounded-xl p-3 border border-primary/30"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <p className="text-xs text-muted-foreground">Serviços</p>
+                          <p className="text-xl font-bold text-primary">12</p>
+                          <p className="text-xs text-primary">3 pendentes</p>
+                        </motion.div>
+                      </motion.div>
+                      
+                      {/* Recent services */}
+                      <motion.div 
+                        className="space-y-2"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.7 }}
+                      >
+                        <p className="text-xs font-semibold text-muted-foreground">Serviços Recentes</p>
+                        {[
+                          { name: 'Troca de óleo', car: 'Civic 2020', value: 150 },
+                          { name: 'Alinhamento', car: 'Corolla 2019', value: 200 },
+                          { name: 'Freios', car: 'HB20 2021', value: 350 },
+                        ].map((service, i) => (
+                          <motion.div 
+                            key={i}
+                            className="bg-card/80 backdrop-blur rounded-xl p-3 flex items-center gap-3 border border-border/50"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.8 + i * 0.1 }}
+                            whileHover={{ x: 5, backgroundColor: 'hsl(var(--secondary))' }}
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                              <Wrench className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{service.name}</p>
+                              <p className="text-xs text-muted-foreground">{service.car}</p>
+                            </div>
+                            <span className="text-sm font-bold text-success">R$ {service.value}</span>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                      
+                      {/* Bottom nav mockup */}
+                      <motion.div 
+                        className="absolute bottom-4 left-4 right-4 h-14 bg-card/90 backdrop-blur rounded-2xl flex items-center justify-around border border-border"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 1 }}
+                      >
+                        <div className="flex flex-col items-center text-primary">
+                          <BarChart3 className="w-5 h-5" />
+                          <span className="text-[10px]">Dashboard</span>
+                        </div>
+                        <motion.div 
+                          className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <span className="text-2xl text-primary-foreground">+</span>
+                        </motion.div>
+                        <div className="flex flex-col items-center text-muted-foreground">
+                          <FileText className="w-5 h-5" />
+                          <span className="text-[10px]">Lista</span>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
-            ))}
-          </div>
-          
-          {/* Mock Phone Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="mt-16 flex justify-center"
-          >
-            <div className="relative">
-              <div className="w-72 h-[500px] bg-gradient-to-br from-card to-secondary rounded-[3rem] p-3 shadow-2xl border-4 border-border">
-                <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden relative">
-                  {/* Phone notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-border rounded-b-2xl" />
-                  
-                  {/* Mock app content */}
-                  <div className="pt-10 px-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
-                        <span className="font-bold text-sm">Dashboard</span>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-secondary" />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-3 border border-green-500/30">
-                        <p className="text-xs text-muted-foreground">Faturamento</p>
-                        <p className="text-lg font-bold text-green-500">R$ 4.850</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-3 border border-blue-500/30">
-                        <p className="text-xs text-muted-foreground">Serviços</p>
-                        <p className="text-lg font-bold text-blue-500">12</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold">Recentes</p>
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-secondary/50 rounded-lg p-3 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <Wrench className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="h-3 bg-muted rounded w-24 mb-1" />
-                            <div className="h-2 bg-muted/50 rounded w-16" />
-                          </div>
-                          <div className="text-xs font-bold text-green-500">R$ {150 + i * 50}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Decorative elements */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-br from-accent/30 to-primary/30 rounded-full blur-2xl" />
-            </div>
-          </motion.div>
+              <motion.div 
+                className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-primary/40 to-accent/40 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+              <motion.div 
+                className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-br from-accent/40 to-primary/40 rounded-full blur-2xl"
+                animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 5, repeat: Infinity }}
+              />
+            </motion.div>
+            
+            {/* Right side features */}
+            <motion.div 
+              className="space-y-6 max-w-sm"
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              {[
+                { icon: MessageCircle, title: 'WhatsApp', desc: 'Envie relatórios fácil', color: 'from-success to-success' },
+                { icon: Shield, title: 'Dados Seguros', desc: 'Backup automático', color: 'from-primary to-accent' },
+                { icon: Smartphone, title: '100% Mobile', desc: 'Use em qualquer lugar', color: 'from-warning to-warning' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  className="flex items-center gap-4 glass-effect rounded-xl p-4 border border-border"
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  whileHover={{ x: -10, transition: { duration: 0.2 } }}
+                >
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                    <item.icon className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{item.title}</h4>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </section>
 
