@@ -10,7 +10,8 @@ import {
   CheckCircle,
   Star,
   ArrowRight,
-  Smartphone
+  Smartphone,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.png';
@@ -40,6 +41,11 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
       icon: Clock,
       title: 'Histórico Completo',
       description: 'Acesse todo o histórico de serviços por cliente, veículo ou período.',
+    },
+    {
+      icon: MessageCircle,
+      title: 'WhatsApp Integrado',
+      description: 'Envie orçamentos e recibos direto para o WhatsApp do cliente com um toque.',
     },
     {
       icon: Shield,
