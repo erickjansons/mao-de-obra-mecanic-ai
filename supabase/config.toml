@@ -3,8 +3,5 @@ project_id = "iwpnutlnaiwopjmqzpbl"
 [functions.create-checkout]
 verify_jwt = false
 
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.create-portal-session]
+[functions.mercadopago-webhook]
 verify_jwt = false

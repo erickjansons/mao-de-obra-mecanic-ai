@@ -3,23 +3,23 @@ import { Check, Crown, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useSubscription, PLAN_PRICES } from '@/hooks/useSubscription';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export const PricingPlans = () => {
-  const { getPlanType, createCheckout, openPortal, isPremium } = useSubscription();
+  const { getPlanType, createCheckout, isPremium } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const currentPlan = getPlanType();
 
-  const handleSubscribe = async (priceId: string, planName: string, mode: 'payment' | 'subscription') => {
-    setLoadingPlan(planName);
+  const handleSubscribe = async (planKey: 'monthly' | 'annual') => {
+    setLoadingPlan(planKey);
     try {
-      const url = await createCheckout(priceId, mode);
+      const url = await createCheckout(planKey);
       if (url) {
         window.location.href = url;
       }
@@ -44,38 +44,10 @@ export const PricingPlans = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
-    setLoadingPlan('manage');
-    try {
-      const url = await openPortal();
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error: any) {
-      console.error('Error:', error);
-      if (error?.message === 'SESSION_EXPIRED') {
-        toast({
-          title: 'Sessão expirada',
-          description: 'Por favor, faça login novamente para continuar.',
-          variant: 'destructive',
-        });
-        navigate('/auth');
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível abrir o portal. Tente novamente.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setLoadingPlan(null);
-    }
-  };
-
   const plans = [
     {
       name: 'Grátis',
-      key: 'free',
+      key: 'free' as const,
       price: 'R$ 0',
       period: '/sempre',
       description: 'Ideal para começar',
@@ -88,13 +60,14 @@ export const PricingPlans = () => {
       popular: false,
       gradient: 'from-slate-500 to-slate-600',
       bgGradient: 'from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50',
+      hasPlan: false,
     },
     {
       name: 'Mensal',
-      key: 'monthly',
-      price: 'R$ 18,90',
+      key: 'monthly' as const,
+      price: 'R$ 10,99',
       period: '',
-      description: 'Pagamento único',
+      description: 'Pagamento único - 30 dias',
       features: [
         'Serviços ilimitados',
         'Geração de PDF',
@@ -105,13 +78,12 @@ export const PricingPlans = () => {
       popular: false,
       gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30',
-      priceId: PLAN_PRICES.monthly.id,
-      mode: PLAN_PRICES.monthly.mode,
+      hasPlan: true,
     },
     {
-      name: 'Econômico',
-      key: 'annual',
-      price: 'R$ 10,90',
+      name: 'Anual',
+      key: 'annual' as const,
+      price: 'R$ 6,99',
       period: '/mês',
       description: 'Melhor custo-benefício',
       features: [
@@ -119,14 +91,13 @@ export const PricingPlans = () => {
         'Geração de PDF',
         'Envio via WhatsApp',
         'Suporte prioritário',
-        '42% mais barato que o Mensal',
+        '36% mais barato que o Mensal',
       ],
       icon: Crown,
       popular: true,
       gradient: 'from-violet-500 to-purple-600',
       bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-900/30 dark:to-purple-900/30',
-      priceId: PLAN_PRICES.annual.id,
-      mode: PLAN_PRICES.annual.mode,
+      hasPlan: true,
     },
   ];
 
@@ -319,24 +290,11 @@ export const PricingPlans = () => {
                 </CardContent>
                 
                 <CardFooter className="relative z-10 pb-6">
-                  {isCurrentPlan ? (
-                    plan.key === 'free' ? (
-                      <Button variant="outline" className="w-full" disabled>
-                        Plano Atual
-                      </Button>
-                    ) : (
-                      <motion.div className="w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={handleManageSubscription}
-                          disabled={loadingPlan === 'manage'}
-                        >
-                          {loadingPlan === 'manage' ? 'Carregando...' : 'Gerenciar Assinatura'}
-                        </Button>
-                      </motion.div>
-                    )
-                  ) : plan.priceId ? (
+                {isCurrentPlan ? (
+                    <Button variant="outline" className="w-full" disabled>
+                      Plano Atual
+                    </Button>
+                  ) : plan.hasPlan ? (
                     <motion.div 
                       className="w-full"
                       whileHover={{ scale: 1.02 }}
@@ -344,7 +302,7 @@ export const PricingPlans = () => {
                     >
                       <Button 
                         className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-5 shadow-lg transition-all duration-300`}
-                        onClick={() => handleSubscribe(plan.priceId!, plan.key, plan.mode!)}
+                        onClick={() => handleSubscribe(plan.key as 'monthly' | 'annual')}
                         disabled={loadingPlan === plan.key}
                       >
                         {loadingPlan === plan.key ? (
@@ -374,22 +332,6 @@ export const PricingPlans = () => {
         })}
       </motion.div>
 
-      {isPremium() && (
-        <motion.div 
-          className="text-center mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Button 
-            variant="ghost" 
-            onClick={handleManageSubscription}
-            disabled={loadingPlan === 'manage'}
-          >
-            {loadingPlan === 'manage' ? 'Carregando...' : 'Gerenciar Assinatura'}
-          </Button>
-        </motion.div>
-      )}
     </div>
   );
 };
