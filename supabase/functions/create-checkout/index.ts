@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const getAllowedOrigin = (_requestOrigin: string | null): string => {
-  // We use a permissive CORS policy because this endpoint is still protected by
-  // Bearer auth (Authorization header) and does not rely on cookies.
   return "*";
 };
 
@@ -47,16 +44,13 @@ serve(async (req) => {
     const userId = user.id;
     const email = user.email;
 
-    const { priceId, mode } = await req.json();
-    if (!priceId) {
-      return new Response(JSON.stringify({ error: "Price ID is required" }), {
+    const { planType } = await req.json();
+    if (!planType || !['monthly', 'annual'].includes(planType)) {
+      return new Response(JSON.stringify({ error: "Invalid plan type" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Validate mode - default to subscription for backwards compatibility
-    const checkoutMode = mode === "payment" ? "payment" : "subscription";
 
     const baseUrl = origin || Deno.env.get("SITE_URL") || "";
     if (!baseUrl) {
@@ -66,58 +60,77 @@ serve(async (req) => {
       });
     }
 
-    console.log("Creating checkout session");
+    console.log("Creating Mercado Pago preference");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2023-10-16",
+    const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN")!;
+
+    // Define plan details
+    const plans = {
+      monthly: {
+        title: "Plano Mensal - Mão de Obra",
+        unit_price: 10.99,
+        description: "Acesso ilimitado por 30 dias",
+      },
+      annual: {
+        title: "Plano Anual - Mão de Obra",
+        unit_price: 83.88, // 6.99 * 12
+        description: "Acesso ilimitado por 1 ano (R$ 6,99/mês)",
+      },
+    };
+
+    const selectedPlan = plans[planType as keyof typeof plans];
+
+    // Create Mercado Pago preference
+    const preferenceResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            title: selectedPlan.title,
+            quantity: 1,
+            unit_price: selectedPlan.unit_price,
+            currency_id: "BRL",
+            description: selectedPlan.description,
+          },
+        ],
+        payer: {
+          email: email,
+        },
+        back_urls: {
+          success: `${baseUrl}/?success=true`,
+          failure: `${baseUrl}/?canceled=true`,
+          pending: `${baseUrl}/?pending=true`,
+        },
+        auto_return: "approved",
+        external_reference: JSON.stringify({ user_id: userId, plan_type: planType }),
+        notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+      }),
     });
 
-    // Check if customer already exists
-    const customers = await stripe.customers.list({ email: email!, limit: 1 });
-    let customerId: string;
-
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      console.log("Found existing customer");
-    } else {
-      const customer = await stripe.customers.create({
-        email: email!,
-        metadata: { user_id: userId },
-      });
-      customerId = customer.id;
-      console.log("Created new customer");
+    if (!preferenceResponse.ok) {
+      const errorData = await preferenceResponse.text();
+      console.error("Mercado Pago API error:", errorData);
+      throw new Error(`Mercado Pago API error: ${preferenceResponse.status}`);
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: checkoutMode,
-      success_url: `${baseUrl}/?success=true`,
-      cancel_url: `${baseUrl}/?canceled=true`,
-      metadata: { user_id: userId },
-    });
+    const preference = await preferenceResponse.json();
+    console.log("Preference created successfully");
 
-    console.log(`Checkout session created successfully (mode: ${checkoutMode})`);
-
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ url: preference.init_point }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     const err = error as any;
-    console.error(
-      "Error creating checkout session:",
-      err?.message ?? err,
-      { type: err?.type, code: err?.code, requestId: err?.requestId }
-    );
+    console.error("Error creating checkout:", err?.message ?? err);
 
     return new Response(
       JSON.stringify({
         error: "checkout_failed",
         message: err?.message ?? "Unknown error",
-        code: err?.code ?? null,
-        type: err?.type ?? null,
-        requestId: err?.requestId ?? null,
       }),
       {
         status: 500,
