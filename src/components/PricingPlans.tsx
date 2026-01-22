@@ -83,9 +83,9 @@ export const PricingPlans = () => {
     {
       name: 'Anual',
       key: 'annual' as const,
-      price: 'R$ 6,99',
-      period: '/mês',
-      description: 'Melhor custo-benefício',
+      price: '12x R$ 6,99',
+      period: '',
+      description: 'Cartão de crédito - Total R$ 83,88',
       features: [
         'Serviços ilimitados',
         'Geração de PDF',
