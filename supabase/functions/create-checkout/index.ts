@@ -80,6 +80,27 @@ serve(async (req) => {
 
     const selectedPlan = plans[planType as keyof typeof plans];
 
+    // Define payment methods based on plan type
+    // Monthly: PIX only, Annual: Card only
+    const paymentMethods = planType === 'monthly' 
+      ? {
+          excluded_payment_types: [
+            { id: "credit_card" },
+            { id: "debit_card" },
+            { id: "ticket" },
+            { id: "atm" }
+          ],
+          default_payment_method_id: "pix"
+        }
+      : {
+          excluded_payment_types: [
+            { id: "ticket" },
+            { id: "atm" },
+            { id: "bank_transfer" }
+          ],
+          installments: 12
+        };
+
     // Create Mercado Pago preference
     const preferenceResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
@@ -100,6 +121,7 @@ serve(async (req) => {
         payer: {
           email: email,
         },
+        payment_methods: paymentMethods,
         back_urls: {
           success: `${baseUrl}/?success=true`,
           failure: `${baseUrl}/?canceled=true`,
