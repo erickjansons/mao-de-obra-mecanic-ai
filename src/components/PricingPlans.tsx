@@ -7,16 +7,25 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { PixPaymentDialog } from './PixPaymentDialog';
 
 export const PricingPlans = () => {
-  const { getPlanType, createCheckout, isPremium } = useSubscription();
+  const { getPlanType, createCheckout, isPremium, refetch } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
+  const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const currentPlan = getPlanType();
 
   const handleSubscribe = async (planKey: 'monthly' | 'annual') => {
+    // For monthly plan, open PIX dialog (transparent checkout)
+    if (planKey === 'monthly') {
+      setPixDialogOpen(true);
+      return;
+    }
+
+    // For annual plan, redirect to Mercado Pago checkout
     setLoadingPlan(planKey);
     try {
       const url = await createCheckout(planKey);
@@ -42,6 +51,14 @@ export const PricingPlans = () => {
     } finally {
       setLoadingPlan(null);
     }
+  };
+
+  const handlePixPaymentSuccess = () => {
+    refetch();
+    toast({
+      title: '🎉 Assinatura ativada!',
+      description: 'Agora você tem acesso ilimitado aos serviços.',
+    });
   };
 
   const plans = [
@@ -332,6 +349,11 @@ export const PricingPlans = () => {
         })}
       </motion.div>
 
+      <PixPaymentDialog 
+        open={pixDialogOpen} 
+        onOpenChange={setPixDialogOpen}
+        onPaymentSuccess={handlePixPaymentSuccess}
+      />
     </div>
   );
 };
