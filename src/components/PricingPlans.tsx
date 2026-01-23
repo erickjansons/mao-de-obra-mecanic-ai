@@ -8,52 +8,33 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PixPaymentDialog } from './PixPaymentDialog';
+import { CardPaymentDialog } from './CardPaymentDialog';
 
 export const PricingPlans = () => {
-  const { getPlanType, createCheckout, isPremium, refetch } = useSubscription();
+  const { getPlanType, isPremium, refetch } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const currentPlan = getPlanType();
 
-  const handleSubscribe = async (planKey: 'monthly' | 'annual') => {
+  const handleSubscribe = (planKey: 'monthly' | 'annual') => {
     // For monthly plan, open PIX dialog (transparent checkout)
     if (planKey === 'monthly') {
       setPixDialogOpen(true);
       return;
     }
 
-    // For annual plan, redirect to Mercado Pago checkout
-    setLoadingPlan(planKey);
-    try {
-      const url = await createCheckout(planKey);
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error: any) {
-      console.error('Error:', error);
-      if (error?.message === 'SESSION_EXPIRED') {
-        toast({
-          title: 'Sessão expirada',
-          description: 'Por favor, faça login novamente para continuar.',
-          variant: 'destructive',
-        });
-        navigate('/auth');
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível iniciar o checkout. Tente novamente.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setLoadingPlan(null);
+    // For annual plan, open Card dialog (transparent checkout with Secure Fields)
+    if (planKey === 'annual') {
+      setCardDialogOpen(true);
+      return;
     }
   };
 
-  const handlePixPaymentSuccess = () => {
+  const handlePaymentSuccess = () => {
     refetch();
     toast({
       title: '🎉 Assinatura ativada!',
@@ -352,7 +333,13 @@ export const PricingPlans = () => {
       <PixPaymentDialog 
         open={pixDialogOpen} 
         onOpenChange={setPixDialogOpen}
-        onPaymentSuccess={handlePixPaymentSuccess}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
+      <CardPaymentDialog
+        open={cardDialogOpen}
+        onOpenChange={setCardDialogOpen}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     </div>
   );
