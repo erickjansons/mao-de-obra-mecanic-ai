@@ -34,6 +34,7 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
   const [copied, setCopied] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [checkingStatus, setCheckingStatus] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
   const mpInstanceRef = useRef<any>(null);
   const { toast } = useToast();
 
@@ -141,12 +142,38 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
     return () => clearInterval(interval);
   }, [open, pixData, paymentStatus, checkPaymentStatus]);
 
+  // Countdown timer
+  useEffect(() => {
+    if (!pixData?.expiration_date || paymentStatus !== 'pending') return;
+
+    const updateTimer = () => {
+      const expDate = new Date(pixData.expiration_date);
+      const now = new Date();
+      const diffMs = expDate.getTime() - now.getTime();
+      
+      if (diffMs <= 0) {
+        setTimeLeft({ minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      setTimeLeft({ minutes, seconds });
+    };
+
+    updateTimer(); // Run immediately
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [pixData?.expiration_date, paymentStatus]);
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setPixData(null);
       setPaymentStatus('pending');
       setCopied(false);
+      setTimeLeft(null);
     }
   }, [open]);
 
@@ -170,14 +197,14 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
     }
   };
 
-  const formatExpirationTime = () => {
-    if (!pixData?.expiration_date) return '';
-    const expDate = new Date(pixData.expiration_date);
-    const now = new Date();
-    const diffMs = expDate.getTime() - now.getTime();
-    const diffMins = Math.max(0, Math.floor(diffMs / 60000));
-    return `${diffMins} minutos`;
+  const formatTime = () => {
+    if (!timeLeft) return '--:--';
+    const mins = String(timeLeft.minutes).padStart(2, '0');
+    const secs = String(timeLeft.seconds).padStart(2, '0');
+    return `${mins}:${secs}`;
   };
+
+  const isExpired = timeLeft?.minutes === 0 && timeLeft?.seconds === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -231,8 +258,8 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center justify-center py-12 gap-4"
             >
-              <XCircle className="h-20 w-20 text-red-500" />
-              <h3 className="text-xl font-semibold text-red-600">Pagamento Recusado</h3>
+              <XCircle className="h-20 w-20 text-destructive" />
+              <h3 className="text-xl font-semibold text-destructive">Pagamento Recusado</h3>
               <p className="text-muted-foreground text-center">
                 O pagamento não foi aprovado. Tente novamente.
               </p>
@@ -291,28 +318,39 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
                 )}
               </Button>
 
-              {/* Expiration Timer */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {/* Countdown Timer */}
+              <div className={`flex items-center gap-2 text-sm ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
                 <Clock className="h-4 w-4" />
-                <span>Expira em {formatExpirationTime()}</span>
+                <span>
+                  {isExpired ? 'Código expirado' : `Expira em ${formatTime()}`}
+                </span>
               </div>
 
+              {/* Expired State */}
+              {isExpired && (
+                <Button onClick={createPixPayment} variant="outline" size="sm">
+                  Gerar novo código
+                </Button>
+              )}
+
               {/* Status Info */}
-              <div className="bg-muted/50 rounded-lg p-4 w-full">
-                <div className="flex items-center gap-2 text-sm">
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="h-2 w-2 rounded-full bg-yellow-500"
-                  />
-                  <span className="text-muted-foreground">
-                    Aguardando pagamento...
-                  </span>
+              {!isExpired && (
+                <div className="bg-muted/50 rounded-lg p-4 w-full">
+                  <div className="flex items-center gap-2 text-sm">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="h-2 w-2 rounded-full bg-yellow-500"
+                    />
+                    <span className="text-muted-foreground">
+                      Aguardando pagamento...
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Após o pagamento, a confirmação é automática.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Após o pagamento, a confirmação é automática.
-                </p>
-              </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

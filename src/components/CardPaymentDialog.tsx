@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,38 +27,34 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
   const [initializing, setInitializing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'form' | 'processing' | 'approved' | 'rejected'>('form');
   const [statusDetail, setStatusDetail] = useState<string>('');
-  const [installments, setInstallments] = useState<string>('12');
-  const [installmentOptions, setInstallmentOptions] = useState<any[]>([]);
-  const [payerEmail, setPayerEmail] = useState('');
-  const [docType, setDocType] = useState('CPF');
-  const [docNumber, setDocNumber] = useState('');
   
   const mpInstanceRef = useRef<any>(null);
   const cardFormRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(false);
   const { toast } = useToast();
 
   // Initialize MercadoPago SDK and CardForm
   useEffect(() => {
     if (!open) return;
     
+    let isMounted = true;
+    mountedRef.current = true;
+
     const initCardForm = async () => {
       setInitializing(true);
       
       // Wait for MercadoPago SDK to be available
       let attempts = 0;
-      while (!window.MercadoPago && attempts < 20) {
+      while (!window.MercadoPago && attempts < 30) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
 
-      if (!window.MercadoPago) {
-        console.error('MercadoPago SDK not loaded');
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar o formulário de pagamento.',
-          variant: 'destructive',
-        });
+      if (!window.MercadoPago || !isMounted) {
+        if (isMounted) {
+          console.error('MercadoPago SDK not loaded');
+          setInitializing(false);
+        }
         return;
       }
 
@@ -71,16 +66,16 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
         }
 
         // Wait for DOM elements to be ready
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Destroy existing card form if any
-        if (cardFormRef.current) {
-          try {
-            cardFormRef.current.unmount();
-          } catch (e) {
-            console.log('CardForm unmount error (ignored):', e);
-          }
-          cardFormRef.current = null;
+        if (!isMounted) return;
+
+        // Check if container elements exist
+        const cardNumberContainer = document.getElementById('card-number-container');
+        if (!cardNumberContainer) {
+          console.error('Card number container not found');
+          setInitializing(false);
+          return;
         }
 
         // Create CardForm with Secure Fields
@@ -92,14 +87,26 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
             cardNumber: {
               id: 'card-number-container',
               placeholder: 'Número do cartão',
+              style: {
+                fontSize: '16px',
+                fontFamily: 'inherit',
+              }
             },
             expirationDate: {
               id: 'expiration-date-container',
               placeholder: 'MM/AA',
+              style: {
+                fontSize: '16px',
+                fontFamily: 'inherit',
+              }
             },
             securityCode: {
               id: 'security-code-container',
               placeholder: 'CVV',
+              style: {
+                fontSize: '16px',
+                fontFamily: 'inherit',
+              }
             },
             cardholderName: {
               id: 'cardholder-name',
@@ -129,55 +136,42 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
             onFormMounted: (error: any) => {
               if (error) {
                 console.error('Form mount error:', error);
+                if (isMounted) setInitializing(false);
                 return;
               }
               console.log('CardForm mounted successfully');
-              setInitializing(false);
+              if (isMounted) setInitializing(false);
             },
-            onSubmit: async (event: any) => {
+            onSubmit: (event: any) => {
               event.preventDefault();
-              await handleSubmit();
             },
             onFetching: (resource: string) => {
               console.log('Fetching resource:', resource);
-            },
-            onCardTokenReceived: (error: any, token: string) => {
-              if (error) {
-                console.error('Token error:', error);
-              }
-            },
-            onInstallmentsReceived: (error: any, installmentsList: any[]) => {
-              if (error) {
-                console.error('Installments error:', error);
-                return;
-              }
-              if (installmentsList && installmentsList.length > 0) {
-                const options = installmentsList[0]?.payer_costs || [];
-                setInstallmentOptions(options);
-              }
             },
           },
         });
 
       } catch (error) {
         console.error('Error initializing CardForm:', error);
-        setInitializing(false);
+        if (isMounted) setInitializing(false);
       }
     };
 
     initCardForm();
 
     return () => {
+      isMounted = false;
+      mountedRef.current = false;
       if (cardFormRef.current) {
         try {
           cardFormRef.current.unmount();
         } catch (e) {
-          console.log('Cleanup unmount error (ignored):', e);
+          // Ignore unmount errors
         }
         cardFormRef.current = null;
       }
     };
-  }, [open, toast]);
+  }, [open]);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -186,7 +180,6 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
       setStatusDetail('');
       setLoading(false);
       setInitializing(true);
-      setInstallmentOptions([]);
     }
   }, [open]);
 
@@ -205,11 +198,13 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
     }
   };
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    
     if (!cardFormRef.current) {
       toast({
         title: 'Erro',
-        description: 'Formulário não inicializado.',
+        description: 'Formulário não inicializado. Aguarde o carregamento.',
         variant: 'destructive',
       });
       return;
@@ -219,25 +214,27 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
     setPaymentStatus('processing');
 
     try {
-      const formData = cardFormRef.current.getCardFormData();
-      console.log('Card form data:', formData);
+      // Create token
+      const formData = await cardFormRef.current.createCardToken();
+      console.log('Card token created:', formData);
 
-      if (!formData.token) {
+      if (!formData?.token) {
         throw new Error('Não foi possível processar os dados do cartão.');
       }
 
       const deviceId = getDeviceId();
+      const cardFormData = cardFormRef.current.getCardFormData();
 
       const response = await supabase.functions.invoke('create-card-payment', {
         body: {
           token: formData.token,
-          payment_method_id: formData.paymentMethodId,
-          installments: formData.installments || '12',
-          issuer_id: formData.issuerId,
+          payment_method_id: cardFormData.paymentMethodId,
+          installments: cardFormData.installments || '12',
+          issuer_id: cardFormData.issuerId,
           device_id: deviceId,
-          payer_email: formData.cardholderEmail,
-          identification_type: formData.identificationType,
-          identification_number: formData.identificationNumber,
+          payer_email: cardFormData.cardholderEmail,
+          identification_type: cardFormData.identificationType,
+          identification_number: cardFormData.identificationNumber,
         },
       });
 
@@ -357,11 +354,11 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center justify-center py-8 gap-4"
             >
-              <XCircle className="h-16 w-16 text-red-500" />
-              <h3 className="text-lg font-semibold text-red-600">Pagamento Recusado</h3>
-              <div className="flex items-start gap-2 bg-red-50 dark:bg-red-950/30 rounded-lg p-3 max-w-sm">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700 dark:text-red-300">{statusDetail}</p>
+              <XCircle className="h-16 w-16 text-destructive" />
+              <h3 className="text-lg font-semibold text-destructive">Pagamento Recusado</h3>
+              <div className="flex items-start gap-2 bg-destructive/10 rounded-lg p-3 max-w-sm">
+                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{statusDetail}</p>
               </div>
               <Button onClick={handleRetry} variant="outline" className="mt-2">
                 Tentar Novamente
@@ -375,10 +372,9 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              ref={containerRef}
             >
               {/* Price Info */}
-              <div className="text-center mb-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg">
+              <div className="text-center mb-6 p-4 bg-primary/5 rounded-lg">
                 <p className="text-3xl font-bold text-primary">12x R$ 6,99</p>
                 <p className="text-sm text-muted-foreground">Total: R$ 83,88 - Plano Anual</p>
               </div>
@@ -390,14 +386,14 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                 </div>
               )}
 
-              <form id="card-payment-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className={initializing ? 'hidden' : ''}>
+              <form id="card-payment-form" onSubmit={handleSubmit} className={initializing ? 'hidden' : ''}>
                 <div className="space-y-4">
                   {/* Card Number - Secure Field */}
                   <div className="space-y-2">
                     <Label>Número do Cartão</Label>
                     <div 
                       id="card-number-container" 
-                      className="h-10 border rounded-md bg-background"
+                      className="h-12 border rounded-md bg-background px-3 flex items-center"
                     />
                   </div>
 
@@ -407,14 +403,14 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                       <Label>Validade</Label>
                       <div 
                         id="expiration-date-container" 
-                        className="h-10 border rounded-md bg-background"
+                        className="h-12 border rounded-md bg-background px-3 flex items-center"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label>CVV</Label>
                       <div 
                         id="security-code-container" 
-                        className="h-10 border rounded-md bg-background"
+                        className="h-12 border rounded-md bg-background px-3 flex items-center"
                       />
                     </div>
                   </div>
@@ -436,21 +432,32 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                   {/* Installments */}
                   <div className="space-y-2">
                     <Label>Parcelas</Label>
-                    <div id="installments-container" className="h-10 border rounded-md bg-background" />
+                    <select 
+                      id="installments-container" 
+                      className="w-full h-12 border rounded-md bg-background px-3 text-sm"
+                    >
+                      <option value="12">12x de R$ 6,99 (sem juros)</option>
+                    </select>
                   </div>
 
                   {/* Document */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Documento</Label>
-                      <div id="identification-type-container" className="h-10 border rounded-md bg-background" />
+                      <select 
+                        id="identification-type-container" 
+                        className="w-full h-12 border rounded-md bg-background px-3 text-sm"
+                      >
+                        <option value="CPF">CPF</option>
+                        <option value="CNPJ">CNPJ</option>
+                      </select>
                     </div>
                     <div className="col-span-2 space-y-2">
                       <Label htmlFor="identification-number">Número</Label>
                       <Input 
                         id="identification-number" 
                         type="text"
-                        placeholder="CPF ou CNPJ"
+                        placeholder="000.000.000-00"
                       />
                     </div>
                   </div>
