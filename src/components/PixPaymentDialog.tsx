@@ -1,10 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, Clock, Loader2, QrCode, CheckCircle2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
+
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
 
 interface PixPaymentDialogProps {
   open: boolean;
@@ -20,18 +26,57 @@ interface PixData {
   status: string;
 }
 
+const MP_PUBLIC_KEY = 'APP_USR-ed63f81e-02c2-446f-9d17-43e3bcf5f46a';
+
 export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPaymentDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [checkingStatus, setCheckingStatus] = useState(false);
+  const mpInstanceRef = useRef<any>(null);
   const { toast } = useToast();
+
+  // Initialize MercadoPago SDK and get device_id
+  useEffect(() => {
+    if (open && window.MercadoPago && !mpInstanceRef.current) {
+      try {
+        mpInstanceRef.current = new window.MercadoPago(MP_PUBLIC_KEY, {
+          locale: 'pt-BR',
+        });
+        console.log('MercadoPago SDK initialized with device fingerprint');
+      } catch (error) {
+        console.error('Error initializing MercadoPago SDK:', error);
+      }
+    }
+  }, [open]);
+
+  const getDeviceId = (): string | null => {
+    try {
+      // Get device_id from MercadoPago SDK
+      if (mpInstanceRef.current?.getDeviceId) {
+        return mpInstanceRef.current.getDeviceId();
+      }
+      // Fallback: try to get from global MP object
+      if (window.MercadoPago?.deviceProfileId) {
+        return window.MercadoPago.deviceProfileId;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting device ID:', error);
+      return null;
+    }
+  };
 
   const createPixPayment = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await supabase.functions.invoke('create-pix-payment');
+      const deviceId = getDeviceId();
+      console.log('Device ID for payment:', deviceId);
+
+      const response = await supabase.functions.invoke('create-pix-payment', {
+        body: { device_id: deviceId },
+      });
       
       if (response.error) {
         throw response.error;

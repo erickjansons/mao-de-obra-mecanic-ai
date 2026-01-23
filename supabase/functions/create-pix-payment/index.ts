@@ -44,28 +44,50 @@ serve(async (req) => {
     const userId = user.id;
     const email = user.email;
 
-    console.log("Creating transparent PIX payment");
+    // Get device_id from request body
+    const body = await req.json().catch(() => ({}));
+    const deviceId = body.device_id;
+
+    console.log("Creating transparent PIX payment with device_id:", deviceId ? "present" : "not present");
 
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN")!;
+
+    // Build payment payload with device fingerprint
+    const paymentPayload: Record<string, any> = {
+      transaction_amount: 10.99,
+      description: "Plano Mensal - Mão de Obra (30 dias)",
+      payment_method_id: "pix",
+      payer: {
+        email: email,
+      },
+      external_reference: JSON.stringify({ user_id: userId, plan_type: "monthly" }),
+      notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+    };
+
+    // Add device_id for fraud prevention (required by Mercado Pago)
+    if (deviceId) {
+      paymentPayload.additional_info = {
+        ip_address: req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("cf-connecting-ip") || "",
+      };
+      // Mercado Pago expects device_id in the header for fingerprinting
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+      "X-Idempotency-Key": `${userId}-monthly-${Date.now()}`,
+    };
+
+    // Add device fingerprint header if available
+    if (deviceId) {
+      headers["X-meli-session-id"] = deviceId;
+    }
 
     // Create direct PIX payment using Mercado Pago Payments API
     const paymentResponse = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-        "X-Idempotency-Key": `${userId}-monthly-${Date.now()}`,
-      },
-      body: JSON.stringify({
-        transaction_amount: 10.99,
-        description: "Plano Mensal - Mão de Obra (30 dias)",
-        payment_method_id: "pix",
-        payer: {
-          email: email,
-        },
-        external_reference: JSON.stringify({ user_id: userId, plan_type: "monthly" }),
-        notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
-      }),
+      headers,
+      body: JSON.stringify(paymentPayload),
     });
 
     if (!paymentResponse.ok) {
