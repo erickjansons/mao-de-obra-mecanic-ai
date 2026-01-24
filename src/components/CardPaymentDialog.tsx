@@ -424,8 +424,8 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                     />
                   </div>
 
-                  {/* Issuer - Hidden, auto-detected */}
-                  <div id="issuer-container" className="hidden" />
+                  {/* Issuer - Hidden, auto-detected - must be SELECT element */}
+                  <select id="issuer-container" className="hidden" />
 
                   {/* Installments */}
                   <div className="space-y-2">
