@@ -237,10 +237,23 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
       });
 
       if (response.error) {
-        throw response.error;
+        console.error('Supabase function error:', response.error);
+        throw new Error('Erro de conexão. Tente novamente.');
       }
 
       const result = response.data;
+      console.log('Payment result:', result);
+
+      // Check if there was an API error
+      if (result.error) {
+        setPaymentStatus('rejected');
+        // Use a friendly message instead of generic API error
+        const friendlyMessage = result.status_detail 
+          ? getStatusDetailMessage(result.status_detail)
+          : 'Não foi possível processar o pagamento. Verifique os dados do cartão.';
+        setStatusDetail(friendlyMessage);
+        return;
+      }
 
       if (result.status === 'approved') {
         setPaymentStatus('approved');
@@ -263,18 +276,20 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
         onOpenChange(false);
       } else {
         setPaymentStatus('rejected');
-        setStatusDetail(result.message || 'Pagamento não aprovado.');
+        setStatusDetail('Pagamento não aprovado. Verifique os dados e tente novamente.');
       }
     } catch (error: any) {
       console.error('Payment error:', error);
       setPaymentStatus('rejected');
-      setStatusDetail(error?.message || 'Erro ao processar pagamento.');
+      setStatusDetail(error?.message || 'Erro ao processar pagamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
   }, [toast, onPaymentSuccess, onOpenChange]);
 
   const getStatusDetailMessage = (detail: string): string => {
+    if (!detail) return 'Pagamento recusado. Verifique os dados do cartão.';
+    
     const messages: Record<string, string> = {
       'cc_rejected_bad_filled_card_number': 'Número do cartão inválido.',
       'cc_rejected_bad_filled_date': 'Data de validade inválida.',
@@ -290,8 +305,10 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
       'cc_rejected_invalid_installments': 'Parcelas inválidas para este cartão.',
       'cc_rejected_max_attempts': 'Limite de tentativas atingido. Tente novamente mais tarde.',
       'cc_rejected_other_reason': 'Pagamento recusado. Tente outro cartão.',
+      'pending_contingency': 'Pagamento em análise pelo banco.',
+      'pending_review_manual': 'Pagamento em análise manual.',
     };
-    return messages[detail] || 'Pagamento recusado. Verifique os dados e tente novamente.';
+    return messages[detail] || 'Pagamento recusado. Verifique os dados do cartão e tente novamente.';
   };
 
   const handleRetry = () => {

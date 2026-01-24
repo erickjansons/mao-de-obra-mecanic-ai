@@ -116,13 +116,20 @@ serve(async (req) => {
 
     const payment = await paymentResponse.json();
 
+    console.log("Mercado Pago response status:", paymentResponse.status);
+    console.log("Payment response:", JSON.stringify(payment));
+
     if (!paymentResponse.ok) {
       console.error("Mercado Pago API error:", JSON.stringify(payment));
+      
+      // Extract meaningful error info
+      const errorCause = payment.cause?.[0]?.description || payment.message || "Erro ao processar pagamento";
+      
       return new Response(JSON.stringify({
         error: "payment_failed",
-        status: payment.status,
-        status_detail: payment.status_detail,
-        message: payment.message || "Erro ao processar pagamento"
+        status: "rejected",
+        status_detail: payment.cause?.[0]?.code || "unknown_error",
+        message: errorCause
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
