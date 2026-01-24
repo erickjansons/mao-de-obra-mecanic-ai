@@ -78,7 +78,14 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
           return;
         }
 
-        // Create CardForm with Secure Fields
+        // Create CardForm with Secure Fields - dark theme styles
+        const secureFieldStyle = {
+          fontSize: '16px',
+          fontFamily: 'inherit',
+          color: '#f8fafc',
+          placeholderColor: '#94a3b8',
+        };
+
         cardFormRef.current = mpInstanceRef.current.cardForm({
           amount: '83.88',
           iframe: true,
@@ -87,26 +94,17 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
             cardNumber: {
               id: 'card-number-container',
               placeholder: 'Número do cartão',
-              style: {
-                fontSize: '16px',
-                fontFamily: 'inherit',
-              }
+              style: secureFieldStyle,
             },
             expirationDate: {
               id: 'expiration-date-container',
               placeholder: 'MM/AA',
-              style: {
-                fontSize: '16px',
-                fontFamily: 'inherit',
-              }
+              style: secureFieldStyle,
             },
             securityCode: {
               id: 'security-code-container',
               placeholder: 'CVV',
-              style: {
-                fontSize: '16px',
-                fontFamily: 'inherit',
-              }
+              style: secureFieldStyle,
             },
             cardholderName: {
               id: 'cardholder-name',
@@ -390,39 +388,39 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                 <div className="space-y-4">
                   {/* Card Number - Secure Field */}
                   <div className="space-y-2">
-                    <Label>Número do Cartão</Label>
+                    <Label className="text-foreground font-medium">Número do Cartão</Label>
                     <div 
                       id="card-number-container" 
-                      className="h-12 border rounded-md bg-background px-3 flex items-center"
+                      className="h-12 border border-input rounded-md bg-slate-800 px-3 flex items-center [&>iframe]:!h-full [&>iframe]:!w-full"
                     />
                   </div>
 
                   {/* Expiration and CVV Row */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Validade</Label>
+                      <Label className="text-foreground font-medium">Validade</Label>
                       <div 
                         id="expiration-date-container" 
-                        className="h-12 border rounded-md bg-background px-3 flex items-center"
+                        className="h-12 border border-input rounded-md bg-slate-800 px-3 flex items-center [&>iframe]:!h-full [&>iframe]:!w-full"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>CVV</Label>
+                      <Label className="text-foreground font-medium">CVV</Label>
                       <div 
                         id="security-code-container" 
-                        className="h-12 border rounded-md bg-background px-3 flex items-center"
+                        className="h-12 border border-input rounded-md bg-slate-800 px-3 flex items-center [&>iframe]:!h-full [&>iframe]:!w-full"
                       />
                     </div>
                   </div>
 
                   {/* Cardholder Name */}
                   <div className="space-y-2">
-                    <Label htmlFor="cardholder-name">Nome no Cartão</Label>
+                    <Label htmlFor="cardholder-name" className="text-foreground font-medium">Nome no Cartão</Label>
                     <Input 
                       id="cardholder-name" 
                       type="text"
                       placeholder="Nome como impresso no cartão"
-                      className="uppercase"
+                      className="uppercase bg-slate-800 border-input text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -431,10 +429,10 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
 
                   {/* Installments */}
                   <div className="space-y-2">
-                    <Label>Parcelas</Label>
+                    <Label className="text-foreground font-medium">Parcelas</Label>
                     <select 
                       id="installments-container" 
-                      className="w-full h-12 border rounded-md bg-background px-3 text-sm"
+                      className="w-full h-12 border border-input rounded-md bg-slate-800 px-3 text-sm text-foreground"
                     >
                       <option value="12">12x de R$ 6,99 (sem juros)</option>
                     </select>
@@ -443,32 +441,34 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
                   {/* Document */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>Documento</Label>
+                      <Label className="text-foreground font-medium">Documento</Label>
                       <select 
                         id="identification-type-container" 
-                        className="w-full h-12 border rounded-md bg-background px-3 text-sm"
+                        className="w-full h-12 border border-input rounded-md bg-slate-800 px-3 text-sm text-foreground"
                       >
                         <option value="CPF">CPF</option>
                         <option value="CNPJ">CNPJ</option>
                       </select>
                     </div>
                     <div className="col-span-2 space-y-2">
-                      <Label htmlFor="identification-number">Número</Label>
+                      <Label htmlFor="identification-number" className="text-foreground font-medium">Número</Label>
                       <Input 
                         id="identification-number" 
                         type="text"
                         placeholder="000.000.000-00"
+                        className="bg-slate-800 border-input text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
 
                   {/* Email */}
                   <div className="space-y-2">
-                    <Label htmlFor="cardholder-email">E-mail</Label>
+                    <Label htmlFor="cardholder-email" className="text-foreground font-medium">E-mail</Label>
                     <Input 
                       id="cardholder-email" 
                       type="email"
                       placeholder="seu@email.com"
+                      className="bg-slate-800 border-input text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
