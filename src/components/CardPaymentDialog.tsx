@@ -7,6 +7,7 @@ import { CreditCard, Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MERCADO_PAGO_PUBLIC_KEY, getFriendlyMercadoPagoTokenizationError } from '@/lib/mercadoPago';
 
 declare global {
   interface Window {
@@ -19,8 +20,6 @@ interface CardPaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   onPaymentSuccess: () => void;
 }
-
-const MP_PUBLIC_KEY = 'APP_USR-ed63f81e-02c2-446f-9d17-43e3bcf5f46a';
 
 export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: CardPaymentDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -60,7 +59,7 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
 
       try {
         if (!mpInstanceRef.current) {
-          mpInstanceRef.current = new window.MercadoPago(MP_PUBLIC_KEY, {
+            mpInstanceRef.current = new window.MercadoPago(MERCADO_PAGO_PUBLIC_KEY, {
             locale: 'pt-BR',
           });
         }
@@ -213,8 +212,13 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
 
     try {
       // Create token
-      const formData = await cardFormRef.current.createCardToken();
-      console.log('Card token created:', formData);
+      let formData: any;
+      try {
+        formData = await cardFormRef.current.createCardToken();
+      } catch (tokenErr) {
+        // MP SDK sometimes throws a plain object with { status, error, message }
+        throw new Error(getFriendlyMercadoPagoTokenizationError(tokenErr));
+      }
 
       if (!formData?.token) {
         throw new Error('Não foi possível processar os dados do cartão.');
@@ -281,7 +285,11 @@ export const CardPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: Card
     } catch (error: any) {
       console.error('Payment error:', error);
       setPaymentStatus('rejected');
-      setStatusDetail(error?.message || 'Erro ao processar pagamento. Tente novamente.');
+      // Avoid showing MP generic Spanish messages directly to the user.
+      const friendly = typeof error?.message === 'string'
+        ? getFriendlyMercadoPagoTokenizationError({ message: error.message, status: error?.status, error: error?.error })
+        : getFriendlyMercadoPagoTokenizationError(error);
+      setStatusDetail(friendly);
     } finally {
       setLoading(false);
     }
