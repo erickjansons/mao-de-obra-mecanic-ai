@@ -1,4 +1,4 @@
-export const MERCADO_PAGO_PUBLIC_KEY = 'APP_USR-ed63f81e-02c2-446f-9d17-43e3bcf5f46a';
+export const MERCADO_PAGO_PUBLIC_KEY = 'APP_USR-da03d4fc-17e8-4e98-8873-47a6fc781dad';
 
 export type MercadoPagoLikeError = {
   status?: number;
