@@ -10,15 +10,28 @@ export type MercadoPagoLikeError = {
 export function getFriendlyMercadoPagoTokenizationError(err: unknown): string {
   const e = err as MercadoPagoLikeError | null;
   const status = (e?.status ?? e?.statusCode) as number | undefined;
-  const message = typeof e?.message === 'string' ? e.message : '';
-  const code = typeof e?.error === 'string' ? e.error : '';
+  const message = typeof e?.message === 'string' ? e.message.toLowerCase() : '';
+  const code = typeof e?.error === 'string' ? e.error.toLowerCase() : '';
+  const originalMessage = typeof (err as any)?.message === 'string' ? (err as any).message : '';
 
-  // This is the exact message users are seeing when MP can't find the resource.
-  // In practice it usually happens when the Public Key is invalid/outdated or the environment is mismatched.
-  if (status === 404 && code.toLowerCase() === 'resource not found' && message.includes('developers.mercadopago.com')) {
-    return 'Não foi possível validar o cartão agora. A configuração do pagamento (chave pública) pode estar incorreta. Tente novamente; se persistir, precisamos atualizar a chave pública do Mercado Pago.';
+  // Handle "Failed to fetch" - network/CORS issues or SDK initialization problems
+  if (message.includes('failed to fetch') || originalMessage.toLowerCase().includes('failed to fetch')) {
+    return 'Erro de conexão com o servidor de pagamentos. Verifique sua internet e tente novamente em alguns segundos.';
   }
 
-  if (message) return message;
+  // Resource not found - usually invalid/mismatched public key
+  if (status === 404 && code === 'resource not found') {
+    return 'Configuração de pagamento inválida. Entre em contato com o suporte.';
+  }
+
+  // Card validation errors
+  if (message.includes('invalid') || message.includes('inválido')) {
+    return 'Dados do cartão inválidos. Verifique o número, validade e CVV.';
+  }
+
+  if (originalMessage && !originalMessage.includes('developers.mercadopago.com')) {
+    return originalMessage;
+  }
+  
   return 'Não foi possível validar o cartão. Verifique os dados e tente novamente.';
 }
