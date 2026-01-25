@@ -8,30 +8,18 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PixPaymentDialog } from './PixPaymentDialog';
-import { CardPaymentDialog } from './CardPaymentDialog';
 
 export const PricingPlans = () => {
   const { getPlanType, isPremium, refetch } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
-  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const currentPlan = getPlanType();
 
-  const handleSubscribe = (planKey: 'monthly' | 'annual') => {
-    // For monthly plan, open PIX dialog (transparent checkout)
-    if (planKey === 'monthly') {
-      setPixDialogOpen(true);
-      return;
-    }
-
-    // For annual plan, open Card dialog (transparent checkout with Secure Fields)
-    if (planKey === 'annual') {
-      setCardDialogOpen(true);
-      return;
-    }
+  const handleSubscribe = (planKey: 'monthly') => {
+    setPixDialogOpen(true);
   };
 
   const handlePaymentSuccess = () => {
@@ -65,36 +53,17 @@ export const PricingPlans = () => {
       key: 'monthly' as const,
       price: 'R$ 10,99',
       period: '',
-      description: 'Pagamento único - 30 dias',
+      description: 'Pagamento único via PIX - 30 dias',
       features: [
         'Serviços ilimitados',
         'Geração de PDF',
         'Envio via WhatsApp',
         'Suporte prioritário',
-      ],
-      icon: Crown,
-      popular: false,
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30',
-      hasPlan: true,
-    },
-    {
-      name: 'Anual',
-      key: 'annual' as const,
-      price: '12x R$ 6,99',
-      period: '',
-      description: 'Cartão de crédito - Total R$ 83,88',
-      features: [
-        'Serviços ilimitados',
-        'Geração de PDF',
-        'Envio via WhatsApp',
-        'Suporte prioritário',
-        '36% mais barato que o Mensal',
       ],
       icon: Crown,
       popular: true,
-      gradient: 'from-violet-500 to-purple-600',
-      bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-900/30 dark:to-purple-900/30',
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30',
       hasPlan: true,
     },
   ];
@@ -166,7 +135,7 @@ export const PricingPlans = () => {
       </motion.div>
 
       <motion.div 
-        className="grid gap-6 md:grid-cols-3"
+        className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -300,7 +269,7 @@ export const PricingPlans = () => {
                     >
                       <Button 
                         className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-5 shadow-lg transition-all duration-300`}
-                        onClick={() => handleSubscribe(plan.key as 'monthly' | 'annual')}
+                        onClick={() => handleSubscribe(plan.key as 'monthly')}
                         disabled={loadingPlan === plan.key}
                       >
                         {loadingPlan === plan.key ? (
@@ -333,12 +302,6 @@ export const PricingPlans = () => {
       <PixPaymentDialog 
         open={pixDialogOpen} 
         onOpenChange={setPixDialogOpen}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
-
-      <CardPaymentDialog
-        open={cardDialogOpen}
-        onOpenChange={setCardDialogOpen}
         onPaymentSuccess={handlePaymentSuccess}
       />
     </div>
