@@ -199,10 +199,12 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
 
   const formatTime = () => {
     if (!timeLeft) return '--:--';
-    // Limit minutes to 59:59 max display (even if more time left)
-    const displayMins = Math.min(timeLeft.minutes, 59);
+    // Limit display to 15 minutes max
+    const totalSeconds = Math.min(timeLeft.minutes * 60 + timeLeft.seconds, 15 * 60);
+    const displayMins = Math.floor(totalSeconds / 60);
+    const displaySecs = totalSeconds % 60;
     const mins = String(displayMins).padStart(2, '0');
-    const secs = String(timeLeft.seconds).padStart(2, '0');
+    const secs = String(displaySecs).padStart(2, '0');
     return `${mins}:${secs}`;
   };
 
