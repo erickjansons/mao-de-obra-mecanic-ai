@@ -199,7 +199,9 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
 
   const formatTime = () => {
     if (!timeLeft) return '--:--';
-    const mins = String(timeLeft.minutes).padStart(2, '0');
+    // Limit minutes to 59:59 max display (even if more time left)
+    const displayMins = Math.min(timeLeft.minutes, 59);
+    const mins = String(displayMins).padStart(2, '0');
     const secs = String(timeLeft.seconds).padStart(2, '0');
     return `${mins}:${secs}`;
   };
@@ -295,7 +297,7 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
 
               {/* Price */}
               <div className="text-center">
-                <p className="text-3xl font-bold text-primary">R$ 10,99</p>
+                <p className="text-3xl font-bold text-primary">R$ 7,99</p>
                 <p className="text-sm text-muted-foreground">Plano Mensal (30 dias)</p>
               </div>
 
