@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { usePlateExtraction } from '@/hooks/usePlateExtraction';
 
 interface ServiceFormProps {
   onSubmit: (service: {
@@ -19,6 +20,7 @@ interface ServiceFormProps {
 
 export const ServiceForm = ({ onSubmit, onSuccess }: ServiceFormProps) => {
   const { toast } = useToast();
+  const { isExtracting, extractFromImage, captureImage } = usePlateExtraction();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     cliente: '',
@@ -28,6 +30,22 @@ export const ServiceForm = ({ onSubmit, onSuccess }: ServiceFormProps) => {
     data_servico: '',
     valor_mao_obra: '',
   });
+
+  const handleCaptureImage = async () => {
+    const imageBase64 = await captureImage();
+    if (!imageBase64) return;
+
+    const extractedData = await extractFromImage(imageBase64);
+    if (extractedData) {
+      setFormData(prev => ({
+        ...prev,
+        placa: extractedData.placa || prev.placa,
+        veiculo: extractedData.veiculo || prev.veiculo,
+        data_servico: extractedData.data_servico || prev.data_servico,
+        cliente: extractedData.cliente || prev.cliente,
+      }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +93,22 @@ export const ServiceForm = ({ onSubmit, onSuccess }: ServiceFormProps) => {
         <div className="w-10 h-10 bg-gradient-to-br from-success to-emerald-500 rounded-lg flex items-center justify-center animate-float">
           <Plus className="w-5 h-5 text-white" />
         </div>
-        <h2 className="text-xl font-bold">Novo Serviço</h2>
+        <h2 className="text-xl font-bold flex-1">Novo Serviço</h2>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleCaptureImage}
+          disabled={isExtracting}
+          className="flex items-center gap-2"
+        >
+          {isExtracting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Camera className="w-4 h-4" />
+          )}
+          {isExtracting ? 'Analisando...' : 'Foto da Placa'}
+        </Button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
