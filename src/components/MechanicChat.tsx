@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Bot, Lock } from 'lucide-react';
+import { MessageCircle, Send, X, Lock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -162,14 +162,27 @@ export const MechanicChat = () => {
             <h3 className="font-bold text-lg">Mecânico Virtual</h3>
             <p className="text-xs opacity-80">Assistente técnico 24h</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            className="text-primary-foreground hover:bg-white/20"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex gap-1">
+            {canUseChat && messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMessages([])}
+                className="text-primary-foreground hover:bg-white/20"
+                title="Novo Chat"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="text-primary-foreground hover:bg-white/20"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Locked State for Free Users */}
