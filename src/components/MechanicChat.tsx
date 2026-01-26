@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Wrench, Loader2, Bot } from 'lucide-react';
+import { MessageCircle, Send, X, Bot, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/useSubscription';
 import ReactMarkdown from 'react-markdown';
+import logo from '@/assets/logo.png';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -20,6 +22,9 @@ export const MechanicChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isPremium } = useSubscription();
+
+  const canUseChat = isPremium();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -28,12 +33,14 @@ export const MechanicChat = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (isOpen && inputRef.current && canUseChat) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isOpen, canUseChat]);
 
   const streamChat = async (userMessage: string) => {
+    if (!canUseChat) return;
+
     const userMsg: Message = { role: 'user', content: userMessage };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -108,7 +115,7 @@ export const MechanicChat = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !canUseChat) return;
     
     const message = input.trim();
     setInput('');
@@ -130,7 +137,7 @@ export const MechanicChat = () => {
           "fixed left-4 bottom-24 z-50 h-14 w-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-110",
           isOpen 
             ? "bg-destructive hover:bg-destructive/90" 
-            : "bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700"
+            : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
         )}
         size="icon"
       >
@@ -144,125 +151,151 @@ export const MechanicChat = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-          <div className="flex items-center justify-center h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm">
-            <Bot className="h-6 w-6" />
-          </div>
+        {/* Header with Logo */}
+        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+          <img 
+            src={logo} 
+            alt="Logo" 
+            className="h-12 w-12 rounded-full object-contain bg-white/20 p-1"
+          />
           <div className="flex-1">
             <h3 className="font-bold text-lg">Mecânico Virtual</h3>
-            <p className="text-xs text-blue-100">Assistente técnico 24h</p>
+            <p className="text-xs opacity-80">Assistente técnico 24h</p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsOpen(false)}
-            className="text-white hover:bg-white/20"
+            className="text-primary-foreground hover:bg-white/20"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center mb-4">
-                <Wrench className="h-10 w-10 text-blue-600" />
-              </div>
-              <h4 className="font-semibold text-lg mb-2">Olá, Mecânico!</h4>
-              <p className="text-sm text-muted-foreground mb-6">
-                Sou seu assistente virtual. Pergunte sobre diagnósticos, procedimentos ou qualquer dúvida técnica.
-              </p>
-              
-              <div className="w-full space-y-2">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Sugestões:</p>
-                {suggestedQuestions.map((question, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setInput(question);
-                      inputRef.current?.focus();
-                    }}
-                    className="w-full text-left text-sm p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50"
-                  >
-                    {question}
-                  </button>
-                ))}
-              </div>
+        {/* Locked State for Free Users */}
+        {!canUseChat ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Lock className="h-10 w-10 text-muted-foreground" />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex gap-2",
-                    msg.role === 'user' ? "justify-end" : "justify-start"
-                  )}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
-                      msg.role === 'user'
-                        ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-md"
-                        : "bg-muted border border-border/50 rounded-bl-md"
-                    )}
-                  >
-                    {msg.role === 'assistant' ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ul]:my-1 [&>ol]:my-1">
-                        <ReactMarkdown>{msg.content || '...'}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      msg.content
-                    )}
+            <h4 className="font-semibold text-lg mb-2">Recurso Premium</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              O assistente mecânico virtual está disponível apenas para assinantes do plano pago.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Faça upgrade do seu plano para ter acesso ilimitado ao chat com IA.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                  <img 
+                    src={logo} 
+                    alt="Logo" 
+                    className="h-16 w-16 rounded-full object-contain mb-4 opacity-80"
+                  />
+                  <h4 className="font-semibold text-lg mb-2">Olá, Mecânico!</h4>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Sou seu assistente virtual. Pergunte sobre diagnósticos, procedimentos ou qualquer dúvida técnica.
+                  </p>
+                  
+                  <div className="w-full space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Sugestões:</p>
+                    {suggestedQuestions.map((question, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setInput(question);
+                          inputRef.current?.focus();
+                        }}
+                        className="w-full text-left text-sm p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50"
+                      >
+                        {question}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-              {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                <div className="flex gap-2 justify-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="bg-muted border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex gap-2",
+                        msg.role === 'user' ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      {msg.role === 'assistant' && (
+                        <img 
+                          src={logo} 
+                          alt="Bot" 
+                          className="flex-shrink-0 w-8 h-8 rounded-full object-contain bg-muted p-0.5"
+                        />
+                      )}
+                      <div
+                        className={cn(
+                          "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                          msg.role === 'user'
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted border border-border/50 rounded-bl-md"
+                        )}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ul]:my-1 [&>ol]:my-1">
+                            <ReactMarkdown>{msg.content || '...'}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                  {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                    <div className="flex gap-2 justify-start">
+                      <img 
+                        src={logo} 
+                        alt="Bot" 
+                        className="flex-shrink-0 w-8 h-8 rounded-full object-contain bg-muted p-0.5"
+                      />
+                      <div className="bg-muted border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </ScrollArea>
+            </ScrollArea>
 
-        {/* Input */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-border/50 bg-background/80 backdrop-blur-sm">
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Digite sua dúvida..."
-              disabled={isLoading}
-              className="flex-1 rounded-full bg-muted border-border/50 focus-visible:ring-blue-500"
-            />
-            <Button 
-              type="submit" 
-              size="icon" 
-              disabled={isLoading || !input.trim()}
-              className="rounded-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 shadow-lg"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </form>
+            {/* Input */}
+            <form onSubmit={handleSubmit} className="p-4 border-t border-border/50 bg-background/80 backdrop-blur-sm">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Digite sua dúvida..."
+                  disabled={isLoading}
+                  className="flex-1 rounded-full bg-muted border-border/50 focus-visible:ring-primary"
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={isLoading || !input.trim()}
+                  className="rounded-full shadow-lg"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
 
       {/* Overlay */}
