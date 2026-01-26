@@ -7,6 +7,7 @@ import { ServiceForm } from '@/components/ServiceForm';
 import { ServiceList } from '@/components/ServiceList';
 import { PricingPlans } from '@/components/PricingPlans';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { MechanicChat } from '@/components/MechanicChat';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -100,6 +101,7 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <MechanicChat />
       
       <main className="px-3 py-4">
         {activeTab === 'dashboard' && (
