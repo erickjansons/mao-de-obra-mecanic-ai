@@ -159,7 +159,7 @@ export const MechanicChat = () => {
             className="h-12 w-12 rounded-full object-contain bg-white/20 p-1"
           />
           <div className="flex-1">
-            <h3 className="font-bold text-lg">Mecânico Virtual</h3>
+            <h3 className="font-bold text-lg">Mecanic-AI</h3>
             <p className="text-xs opacity-80">Assistente técnico 24h</p>
           </div>
           <div className="flex gap-1">
