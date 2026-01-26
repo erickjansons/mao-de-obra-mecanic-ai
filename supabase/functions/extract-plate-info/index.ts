@@ -45,18 +45,19 @@ serve(async (req) => {
 
 INSTRUÇÕES:
 1. Identifique a PLACA do veículo (formato brasileiro: ABC-1234 ou ABC1D23 Mercosul)
-2. Identifique o MODELO/MARCA do veículo se visível
+2. Identifique o MODELO/MARCA do veículo se visível, INCLUINDO O ANO se possível
 3. A data de hoje é: ${today}
 
 IMPORTANTE:
 - Se não conseguir identificar algum campo com certeza, retorne string vazia para esse campo
 - Foque principalmente na placa, que é o mais importante
+- Para o veículo, tente identificar marca, modelo E ANO (ex: "Honda Civic 2020", "Fiat Uno 2015")
 - Não invente informações
 
 Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem explicações):
 {
   "placa": "ABC1234",
-  "veiculo": "Honda Civic",
+  "veiculo": "Honda Civic 2020",
   "data_servico": "${today}",
   "cliente": ""
 }`
