@@ -134,7 +134,7 @@ export const MechanicChat = () => {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed left-4 bottom-24 z-50 h-14 w-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-110",
+          "fixed right-4 bottom-24 z-50 h-14 w-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-110",
           isOpen 
             ? "bg-destructive hover:bg-destructive/90" 
             : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
@@ -147,8 +147,8 @@ export const MechanicChat = () => {
       {/* Chat Panel */}
       <div
         className={cn(
-          "fixed left-0 top-0 z-40 h-full w-[340px] bg-gradient-to-b from-background to-background/95 border-r border-border/50 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed right-0 top-0 z-40 h-full w-[340px] bg-gradient-to-b from-background to-background/95 border-l border-border/50 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
+          isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         {/* Header with Logo */}
