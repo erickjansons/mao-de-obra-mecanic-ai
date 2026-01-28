@@ -301,28 +301,26 @@ export const PricingPlans = () => {
       </motion.div>
 
       {/* Token Redemption Section */}
-      {!isPremium() && (
-        <motion.div
-          className="mt-6 max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                ou use um código
-              </span>
-            </div>
+      <motion.div
+        className="mt-6 max-w-2xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
-          <div className="mt-4">
-            <TokenRedemption onSuccess={refetch} />
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              {isPremium() ? 'estender assinatura' : 'ou use um código'}
+            </span>
           </div>
-        </motion.div>
-      )}
+        </div>
+        <div className="mt-4">
+          <TokenRedemption onSuccess={refetch} />
+        </div>
+      </motion.div>
 
       <PixPaymentDialog 
         open={pixDialogOpen} 
