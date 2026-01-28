@@ -185,33 +185,22 @@ export const ServiceForm = ({ onSubmit, onSuccess }: ServiceFormProps) => {
           <h2 className="text-xl font-bold flex-1">Novo Serviço</h2>
         </div>
 
-        {/* Camera Buttons */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleStartCamera}
-            disabled={isExtracting}
-            className="flex-1 flex items-center justify-center gap-2"
-          >
-            {isExtracting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Camera className="w-4 h-4" />
-            )}
-            Tirar Foto
-          </Button>
+        {/* Photo Button */}
+        <div className="mb-4">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleCaptureFromFile}
             disabled={isExtracting}
-            className="flex-1 flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2"
           >
-            <ImageIcon className="w-4 h-4" />
-            Galeria
+            {isExtracting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ImageIcon className="w-4 h-4" />
+            )}
+            PHOTO
           </Button>
         </div>
 
