@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PixPaymentDialog } from './PixPaymentDialog';
+import { TokenRedemption } from './TokenRedemption';
 
 export const PricingPlans = () => {
   const { getPlanType, isPremium, refetch } = useSubscription();
@@ -298,6 +299,18 @@ export const PricingPlans = () => {
           );
         })}
       </motion.div>
+
+      {/* Token Redemption Section */}
+      {!isPremium() && (
+        <motion.div
+          className="mt-8 max-w-md mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <TokenRedemption onSuccess={refetch} />
+        </motion.div>
+      )}
 
       <PixPaymentDialog 
         open={pixDialogOpen} 
