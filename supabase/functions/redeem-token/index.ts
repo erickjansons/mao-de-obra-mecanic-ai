@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const periodEnd = new Date(now);
-    periodEnd.setFullYear(periodEnd.getFullYear() + 100); // Lifetime access
+    periodEnd.setDate(periodEnd.getDate() + 30); // 30 days access
 
     if (existingSub) {
       // Update existing subscription
