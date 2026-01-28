@@ -48,7 +48,7 @@ export const RecentServices = ({ services }: RecentServicesProps) => {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {service.servico || 'Serviço não informado'} - {service.veiculo || 'Veículo não informado'} {service.placa ? `(${service.placa})` : ''}
+                    {service.servico || 'Serviço não informado'} - <span className="font-semibold text-foreground">{service.veiculo || 'Veículo não informado'}</span> {service.placa ? `(${service.placa})` : ''}
                   </p>
                   <p className="text-xs text-success mt-1 font-medium">
                     R$ {(service.valor_mao_obra || 0).toFixed(2)}
