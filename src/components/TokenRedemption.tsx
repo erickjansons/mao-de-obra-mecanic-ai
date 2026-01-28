@@ -72,7 +72,7 @@ export const TokenRedemption = ({ onSuccess }: TokenRedemptionProps) => {
           Tem um código de resgate?
         </CardTitle>
         <CardDescription>
-          Insira seu código para ativar o plano PRO gratuitamente
+          Insira seu código para ativar o plano PRO por 30 dias
         </CardDescription>
       </CardHeader>
       <CardContent>
