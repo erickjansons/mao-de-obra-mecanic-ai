@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      redemption_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          is_used: boolean
+          token: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          token: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           cliente: string
