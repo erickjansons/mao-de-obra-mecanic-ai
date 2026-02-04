@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Commission rate: 40% (displayed as 50% with transfer fees)
-const COMMISSION_RATE = 0.40;
+// Commission rate: 45% (displayed as 50% with transfer fees)
+const COMMISSION_RATE = 0.45;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

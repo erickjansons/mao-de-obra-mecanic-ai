@@ -1,6 +1,7 @@
 import logo from '@/assets/logo.png';
 import { UserMenu } from './UserMenu';
 import { DownloadTutorialDialog } from './DownloadTutorialDialog';
+import { SubscriptionStatus } from './SubscriptionStatus';
 
 export const Header = () => {
   return (
@@ -18,6 +19,9 @@ export const Header = () => {
                 Gerenciador de Mão de Obra
               </h1>
               <p className="text-muted-foreground text-sm">Oficina Mecânica</p>
+              <div className="mt-1">
+                <SubscriptionStatus />
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">

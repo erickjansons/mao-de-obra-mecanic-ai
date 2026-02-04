@@ -65,7 +65,7 @@ export const AffiliateDashboard = () => {
             <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">
                 <strong>Nota:</strong> A comissão de 50% tem um desconto de taxas de transferência bancária, 
-                resultando em um valor líquido de aproximadamente 40% do valor da assinatura.
+                resultando em um valor líquido de aproximadamente 45% do valor da assinatura.
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export const AffiliateDashboard = () => {
             <div>
               <p className="font-semibold text-lg">Comissão: 50%</p>
               <p className="text-xs text-muted-foreground">
-                *Valor líquido após taxas: ~40%
+                *Valor líquido após taxas: ~45%
               </p>
             </div>
             <div className="text-right">

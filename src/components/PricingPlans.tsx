@@ -52,7 +52,7 @@ export const PricingPlans = () => {
     {
       name: 'Mensal',
       key: 'monthly' as const,
-      price: 'R$ 7,99',
+      price: 'R$ 9,99',
       period: '',
       description: 'Pagamento único via PIX - 30 dias',
       features: [
