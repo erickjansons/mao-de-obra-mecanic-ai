@@ -299,7 +299,7 @@ export const PixPaymentDialog = ({ open, onOpenChange, onPaymentSuccess }: PixPa
 
               {/* Price */}
               <div className="text-center">
-                <p className="text-3xl font-bold text-primary">R$ 7,99</p>
+                <p className="text-3xl font-bold text-primary">R$ 9,99</p>
                 <p className="text-sm text-muted-foreground">Plano Mensal (30 dias)</p>
               </div>
 
