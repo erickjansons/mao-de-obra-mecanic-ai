@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          paid_earnings: number
+          pending_earnings: number
+          referral_code: string
+          total_earnings: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          paid_earnings?: number
+          pending_earnings?: number
+          referral_code: string
+          total_earnings?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          paid_earnings?: number
+          pending_earnings?: number
+          referral_code?: string
+          total_earnings?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -64,6 +100,44 @@ export type Database = {
           used_by?: string | null
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number
+          converted_at: string | null
+          created_at: string
+          id: string
+          referred_user_id: string
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount?: number
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -151,7 +225,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_referral_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

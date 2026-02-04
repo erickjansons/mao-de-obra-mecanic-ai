@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, LogIn, UserPlus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,21 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  
+  // Capture referral code from URL
+  const referralCode = searchParams.get('ref');
+
+  useEffect(() => {
+    if (referralCode) {
+      // Store referral code in localStorage for later use
+      localStorage.setItem('referral_code', referralCode);
+      // Show signup form when coming from referral link
+      setShowAuthForm(true);
+      setIsLogin(false);
+    }
+  }, [referralCode]);
 
   useEffect(() => {
     if (!loading && user) {

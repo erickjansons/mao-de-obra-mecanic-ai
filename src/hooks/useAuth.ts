@@ -30,13 +30,30 @@ export const useAuth = () => {
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl
       }
     });
+
+    // If signup successful and there's a referral code, register the referral
+    if (!error && data.user) {
+      const referralCode = localStorage.getItem('referral_code');
+      if (referralCode) {
+        try {
+          await supabase.functions.invoke('register-referral', {
+            body: { referralCode, userId: data.user.id }
+          });
+          // Clear the referral code after use
+          localStorage.removeItem('referral_code');
+        } catch (err) {
+          console.error('Error registering referral:', err);
+        }
+      }
+    }
+
     return { error };
   };
 
