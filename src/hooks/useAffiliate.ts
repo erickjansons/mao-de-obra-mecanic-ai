@@ -12,6 +12,8 @@ interface Affiliate {
   paid_earnings: number;
   is_active: boolean;
   created_at: string;
+  pix_key: string | null;
+  pix_key_type: string | null;
 }
 
 interface Referral {

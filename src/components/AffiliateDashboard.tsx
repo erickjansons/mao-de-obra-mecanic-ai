@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AffiliatePayoutRequest } from './AffiliatePayoutRequest';
+import { AffiliatePayoutHistory } from './AffiliatePayoutHistory';
 
 export const AffiliateDashboard = () => {
   const { 
@@ -15,7 +17,8 @@ export const AffiliateDashboard = () => {
     stats, 
     becomeAffiliate, 
     getAffiliateLink, 
-    copyAffiliateLink 
+    copyAffiliateLink,
+    refetch,
   } = useAffiliate();
 
   if (loading) {
@@ -168,6 +171,18 @@ export const AffiliateDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payout Request Section */}
+      <AffiliatePayoutRequest
+        affiliateId={affiliate.id}
+        pendingEarnings={stats.pendingEarnings}
+        pixKey={affiliate.pix_key}
+        pixKeyType={affiliate.pix_key_type}
+        onPixKeySaved={refetch}
+      />
+
+      {/* Payout History */}
+      <AffiliatePayoutHistory affiliateId={affiliate.id} />
 
       {/* Referrals List */}
       <Card className="gradient-border">
