@@ -1,0 +1,97 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Commission rate: 40% (displayed as 50% with transfer fees)
+const COMMISSION_RATE = 0.40;
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { userId, subscriptionAmount } = await req.json();
+
+    if (!userId || !subscriptionAmount) {
+      return new Response(
+        JSON.stringify({ error: 'Missing userId or subscriptionAmount' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Find the referral for this user
+    const { data: referral, error: referralError } = await supabase
+      .from('referrals')
+      .select('*, affiliates(*)')
+      .eq('referred_user_id', userId)
+      .eq('status', 'pending')
+      .single();
+
+    if (referralError || !referral) {
+      // No pending referral for this user, that's okay
+      return new Response(
+        JSON.stringify({ message: 'No pending referral found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const commissionAmount = subscriptionAmount * COMMISSION_RATE;
+
+    // Update the referral to converted
+    const { error: updateReferralError } = await supabase
+      .from('referrals')
+      .update({
+        status: 'converted',
+        commission_amount: commissionAmount,
+        converted_at: new Date().toISOString(),
+      })
+      .eq('id', referral.id);
+
+    if (updateReferralError) {
+      console.error('Error updating referral:', updateReferralError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to update referral' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Update the affiliate's earnings
+    const { error: updateAffiliateError } = await supabase
+      .from('affiliates')
+      .update({
+        total_earnings: (referral.affiliates.total_earnings || 0) + commissionAmount,
+        pending_earnings: (referral.affiliates.pending_earnings || 0) + commissionAmount,
+      })
+      .eq('id', referral.affiliate_id);
+
+    if (updateAffiliateError) {
+      console.error('Error updating affiliate:', updateAffiliateError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to update affiliate earnings' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, commissionAmount }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

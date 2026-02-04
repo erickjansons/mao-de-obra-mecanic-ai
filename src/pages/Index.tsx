@@ -8,6 +8,7 @@ import { ServiceList } from '@/components/ServiceList';
 import { PricingPlans } from '@/components/PricingPlans';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { MechanicChat } from '@/components/MechanicChat';
+import { AffiliateDashboard } from '@/components/AffiliateDashboard';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -158,6 +159,10 @@ const Index = () => {
 
         {activeTab === 'planos' && (
           <PricingPlans />
+        )}
+
+        {activeTab === 'afiliados' && (
+          <AffiliateDashboard />
         )}
       </main>
     </div>
