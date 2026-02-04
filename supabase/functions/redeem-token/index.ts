@@ -108,6 +108,10 @@ Deno.serve(async (req) => {
     const periodEnd = new Date(now);
     periodEnd.setDate(periodEnd.getDate() + 30); // 30 days access
 
+    // Token value for commission calculation (same as monthly plan)
+    const TOKEN_VALUE = 9.99;
+    const COMMISSION_RATE = 0.45;
+
     if (existingSub) {
       // Update existing subscription
       const { error: subError } = await adminClient
@@ -147,6 +151,44 @@ Deno.serve(async (req) => {
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+    }
+
+    // Process affiliate commission if user was referred
+    try {
+      const { data: referral } = await adminClient
+        .from('referrals')
+        .select('*, affiliates(*)')
+        .eq('referred_user_id', user.id)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (referral) {
+        const commissionAmount = TOKEN_VALUE * COMMISSION_RATE;
+
+        // Update the referral to converted
+        await adminClient
+          .from('referrals')
+          .update({
+            status: 'converted',
+            commission_amount: commissionAmount,
+            converted_at: now.toISOString(),
+          })
+          .eq('id', referral.id);
+
+        // Update the affiliate's earnings
+        await adminClient
+          .from('affiliates')
+          .update({
+            total_earnings: (referral.affiliates.total_earnings || 0) + commissionAmount,
+            pending_earnings: (referral.affiliates.pending_earnings || 0) + commissionAmount,
+          })
+          .eq('id', referral.affiliate_id);
+
+        console.log(`Affiliate commission processed: R$ ${commissionAmount.toFixed(2)} for referral ${referral.id}`);
+      }
+    } catch (affiliateError) {
+      // Log but don't fail the token redemption if affiliate processing fails
+      console.error('Error processing affiliate commission:', affiliateError);
     }
 
     return new Response(
