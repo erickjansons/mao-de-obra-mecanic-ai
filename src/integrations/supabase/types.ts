@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_payouts: {
+        Row: {
+          admin_notes: string | null
+          affiliate_id: string
+          amount: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          pix_key: string
+          pix_key_type: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          affiliate_id: string
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pix_key: string
+          pix_key_type: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          affiliate_id?: string
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pix_key?: string
+          pix_key_type?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates: {
         Row: {
           created_at: string
@@ -21,6 +77,8 @@ export type Database = {
           is_active: boolean
           paid_earnings: number
           pending_earnings: number
+          pix_key: string | null
+          pix_key_type: string | null
           referral_code: string
           total_earnings: number
           updated_at: string
@@ -32,6 +90,8 @@ export type Database = {
           is_active?: boolean
           paid_earnings?: number
           pending_earnings?: number
+          pix_key?: string | null
+          pix_key_type?: string | null
           referral_code: string
           total_earnings?: number
           updated_at?: string
@@ -43,6 +103,8 @@ export type Database = {
           is_active?: boolean
           paid_earnings?: number
           pending_earnings?: number
+          pix_key?: string | null
+          pix_key_type?: string | null
           referral_code?: string
           total_earnings?: number
           updated_at?: string

@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.mechanic-chat]
 verify_jwt = false
+
+[functions.register-referral]
+verify_jwt = false
+
+[functions.convert-referral]
+verify_jwt = false
+
+[functions.manage-affiliate-payout]
+verify_jwt = false
