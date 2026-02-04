@@ -25,13 +25,13 @@ export const PLAN_LIMITS = {
 
 export const PLAN_PRICES = {
   monthly: {
-    amount: 1099,
-    display: 'R$ 10,99',
+    amount: 999,
+    display: 'R$ 9,99',
   },
   annual: {
-    amount: 699,
-    display: 'R$ 6,99/mês',
-    savings: '36% de economia vs mensal',
+    amount: 799,
+    display: 'R$ 7,99/mês',
+    savings: '20% de economia vs mensal',
   },
 };
 

@@ -1,0 +1,66 @@
+import { Clock, Crown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useSubscription } from '@/hooks/useSubscription';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
+
+interface SubscriptionExpiryAlertProps {
+  onRenew: () => void;
+}
+
+export const SubscriptionExpiryAlert = ({ onRenew }: SubscriptionExpiryAlertProps) => {
+  const { subscription, isPremium } = useSubscription();
+
+  if (!isPremium() || !subscription?.current_period_end) {
+    return null;
+  }
+
+  const endDate = parseISO(subscription.current_period_end);
+  const now = new Date();
+  const daysRemaining = differenceInDays(endDate, now);
+  const hoursRemaining = differenceInHours(endDate, now);
+
+  // Only show if 3 days or less remaining
+  if (daysRemaining > 3) {
+    return null;
+  }
+
+  const isExpired = daysRemaining < 0;
+  const isLastDay = daysRemaining === 0 && hoursRemaining > 0;
+
+  const getMessage = () => {
+    if (isExpired) {
+      return 'Seu plano expirou! Renove para continuar.';
+    }
+    if (isLastDay) {
+      return `Seu plano expira em ${hoursRemaining} horas!`;
+    }
+    return `Seu plano expira em ${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'}!`;
+  };
+
+  return (
+    <Card className={`mb-4 border-2 ${isExpired ? 'border-destructive bg-destructive/10' : 'border-warning bg-warning/10'}`}>
+      <CardContent className="py-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Clock className={`h-5 w-5 ${isExpired ? 'text-destructive' : 'text-warning'}`} />
+            <div>
+              <p className="font-semibold">
+                {getMessage()}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isExpired 
+                  ? 'Seus recursos premium estão desativados.' 
+                  : 'Renove agora para não perder o acesso.'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={onRenew} size="sm" className="bg-primary">
+            <Crown className="h-4 w-4 mr-2" />
+            Renovar Agora
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

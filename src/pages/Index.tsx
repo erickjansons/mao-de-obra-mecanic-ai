@@ -7,6 +7,7 @@ import { ServiceForm } from '@/components/ServiceForm';
 import { ServiceList } from '@/components/ServiceList';
 import { PricingPlans } from '@/components/PricingPlans';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { SubscriptionExpiryAlert } from '@/components/SubscriptionExpiryAlert';
 import { MechanicChat } from '@/components/MechanicChat';
 import { AffiliateDashboard } from '@/components/AffiliateDashboard';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
@@ -105,6 +106,9 @@ const Index = () => {
       <MechanicChat />
       
       <main className="px-3 py-4">
+        {/* Subscription Expiry Alert - shown on all tabs for premium users */}
+        <SubscriptionExpiryAlert onRenew={() => setActiveTab('planos')} />
+        
         {activeTab === 'dashboard' && (
           <>
             {!isPremium() && (

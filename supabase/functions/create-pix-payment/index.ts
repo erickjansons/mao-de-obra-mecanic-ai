@@ -54,7 +54,7 @@ serve(async (req) => {
 
     // Build payment payload with device fingerprint
     const paymentPayload: Record<string, any> = {
-      transaction_amount: 7.99,
+      transaction_amount: 9.99,
       description: "Plano Mensal - Mão de Obra (30 dias)",
       payment_method_id: "pix",
       payer: {
