@@ -23,24 +23,6 @@ interface PayoutRequest {
   pixKeyType: string;
 }
 
-// Check if a date is within the current week (Sunday to Saturday)
-const isWithinCurrentWeek = (dateString: string): boolean => {
-  const date = new Date(dateString);
-  const now = new Date();
-  
-  // Get the start of the current week (Sunday)
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-  
-  // Get the end of the current week (Saturday)
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
-  
-  return date >= startOfWeek && date <= endOfWeek;
-};
-
 export const useAffiliatePayouts = (affiliateId: string | undefined) => {
   const { toast } = useToast();
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([]);
@@ -54,6 +36,7 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     }
 
     try {
+      // Fetch payouts
       const { data, error } = await supabase
         .from('affiliate_payouts')
         .select('*')
@@ -69,22 +52,12 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     }
   };
 
-  const requestPayout = async ({ amount, pixKey, pixKeyType }: PayoutRequest) => {
+  const requestPayout = async ({ amount, pixKey, pixKeyType }: PayoutRequest): Promise<{ success: boolean }> => {
     if (!affiliateId) return { success: false };
 
     setRequesting(true);
     try {
-      // Check if there's already a pending payout
-      const pendingPayout = payouts.find(p => p.status === 'pending' || p.status === 'processing');
-      if (pendingPayout) {
-        toast({
-          title: 'Solicitação pendente',
-          description: 'Você já tem uma solicitação de saque em andamento. Aguarde a conclusão.',
-          variant: 'destructive',
-        });
-        return { success: false };
-      }
-
+      // Create payout request with 'completed' status (immediate approval via WhatsApp)
       const { data, error } = await supabase
         .from('affiliate_payouts')
         .insert({
@@ -92,19 +65,45 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
           amount,
           pix_key: pixKey,
           pix_key_type: pixKeyType,
-          status: 'pending',
+          status: 'completed',
+          completed_at: new Date().toISOString(),
         })
         .select()
         .single();
 
       if (error) throw error;
 
+      // Update affiliate balance - deduct from pending_earnings and add to paid_earnings
+      const { error: updateError } = await supabase
+        .from('affiliates')
+        .update({
+          pending_earnings: supabase.rpc ? 0 : 0, // Will be handled below
+        })
+        .eq('id', affiliateId);
+
+      // Use RPC or direct update to handle the balance
+      const { data: affiliateData } = await supabase
+        .from('affiliates')
+        .select('pending_earnings, paid_earnings')
+        .eq('id', affiliateId)
+        .single();
+
+      if (affiliateData) {
+        await supabase
+          .from('affiliates')
+          .update({
+            pending_earnings: Math.max(0, (affiliateData.pending_earnings || 0) - amount),
+            paid_earnings: (affiliateData.paid_earnings || 0) + amount,
+          })
+          .eq('id', affiliateId);
+      }
+
       // Update local state
       setPayouts(prev => [data as AffiliatePayout, ...prev]);
 
       toast({
-        title: 'Saque solicitado!',
-        description: `Sua solicitação de R$ ${amount.toFixed(2)} foi enviada para análise.`,
+        title: 'Saque registrado!',
+        description: `Seu saque de R$ ${amount.toFixed(2)} foi registrado. Aguarde o pagamento via PIX.`,
       });
 
       return { success: true };
@@ -125,17 +124,13 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     fetchPayouts();
   }, [affiliateId]);
 
-  // Check if user already requested a payout this week
-  const hasRequestedThisWeek = payouts.some(p => isWithinCurrentWeek(p.created_at));
-  const canRequestThisWeek = !hasRequestedThisWeek;
-
   const stats = {
     totalRequested: payouts.reduce((acc, p) => acc + Number(p.amount), 0),
     totalPaid: payouts
       .filter(p => p.status === 'completed')
       .reduce((acc, p) => acc + Number(p.amount), 0),
     pendingPayouts: payouts.filter(p => p.status === 'pending' || p.status === 'processing'),
-    hasPendingRequest: payouts.some(p => p.status === 'pending' || p.status === 'processing'),
+    hasPendingRequest: false, // No longer blocking new requests
   };
 
   return {
@@ -143,7 +138,6 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     loading,
     requesting,
     stats,
-    canRequestThisWeek,
     requestPayout,
     refetch: fetchPayouts,
   };
