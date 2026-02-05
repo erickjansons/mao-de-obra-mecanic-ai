@@ -23,6 +23,24 @@ interface PayoutRequest {
   pixKeyType: string;
 }
 
+// Check if a date is within the current week (Sunday to Saturday)
+const isWithinCurrentWeek = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  // Get the start of the current week (Sunday)
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  // Get the end of the current week (Saturday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  
+  return date >= startOfWeek && date <= endOfWeek;
+};
+
 export const useAffiliatePayouts = (affiliateId: string | undefined) => {
   const { toast } = useToast();
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([]);
@@ -107,6 +125,10 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     fetchPayouts();
   }, [affiliateId]);
 
+  // Check if user already requested a payout this week
+  const hasRequestedThisWeek = payouts.some(p => isWithinCurrentWeek(p.created_at));
+  const canRequestThisWeek = !hasRequestedThisWeek;
+
   const stats = {
     totalRequested: payouts.reduce((acc, p) => acc + Number(p.amount), 0),
     totalPaid: payouts
@@ -121,6 +143,7 @@ export const useAffiliatePayouts = (affiliateId: string | undefined) => {
     loading,
     requesting,
     stats,
+    canRequestThisWeek,
     requestPayout,
     refetch: fetchPayouts,
   };
