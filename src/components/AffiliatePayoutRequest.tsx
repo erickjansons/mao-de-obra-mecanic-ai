@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Wallet, AlertCircle, Banknote } from 'lucide-react';
+import { Wallet, AlertCircle, Banknote, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ interface AffiliatePayoutRequestProps {
 }
 
 const MIN_PAYOUT_AMOUNT = 10; // Minimum R$ 10 to request payout
+const WHATSAPP_NUMBER = '5569984102021';
 
 export const AffiliatePayoutRequest = ({
   affiliateId,
@@ -28,7 +29,7 @@ export const AffiliatePayoutRequest = ({
   onPixKeySaved,
 }: AffiliatePayoutRequestProps) => {
   const { toast } = useToast();
-  const { requestPayout, requesting, stats } = useAffiliatePayouts(affiliateId);
+  const { requestPayout, requesting, stats, canRequestThisWeek } = useAffiliatePayouts(affiliateId);
   
   const [pixKey, setPixKey] = useState(savedPixKey || '');
   const [pixKeyType, setPixKeyType] = useState(savedPixKeyType || '');
@@ -70,7 +71,7 @@ export const AffiliatePayoutRequest = ({
     }
   };
 
-  const handleRequestPayout = async () => {
+  const handleRequestPayoutViaWhatsApp = async () => {
     const requestAmount = parseFloat(amount);
     
     if (!requestAmount || requestAmount < MIN_PAYOUT_AMOUNT) {
@@ -91,6 +92,15 @@ export const AffiliatePayoutRequest = ({
       return;
     }
 
+    if (!canRequestThisWeek) {
+      toast({
+        title: 'Limite semanal',
+        description: 'Você já solicitou um saque esta semana. Aguarde até a próxima semana.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!savedPixKey || !savedPixKeyType) {
       toast({
         title: 'Chave PIX necessária',
@@ -100,6 +110,7 @@ export const AffiliatePayoutRequest = ({
       return;
     }
 
+    // Create payout request with processing status
     const result = await requestPayout({
       amount: requestAmount,
       pixKey: savedPixKey,
@@ -107,11 +118,31 @@ export const AffiliatePayoutRequest = ({
     });
 
     if (result.success) {
+      // Generate WhatsApp message
+      const pixTypeLabels: Record<string, string> = {
+        cpf: 'CPF',
+        cnpj: 'CNPJ',
+        email: 'E-mail',
+        phone: 'Telefone',
+        random: 'Chave Aleatória',
+      };
+      
+      const message = `Olá! Sou afiliado e gostaria de solicitar um saque.\n\n` +
+        `💰 Valor: R$ ${requestAmount.toFixed(2)}\n` +
+        `🔑 Tipo PIX: ${pixTypeLabels[savedPixKeyType] || savedPixKeyType}\n` +
+        `📋 Chave PIX: ${savedPixKey}\n\n` +
+        `Por favor, confirme o pagamento quando realizado. Obrigado!`;
+      
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      
+      // Open WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
       setAmount('');
     }
   };
 
-  const canRequestPayout = pendingEarnings >= MIN_PAYOUT_AMOUNT && savedPixKey && !stats.hasPendingRequest;
+  const canRequestPayout = pendingEarnings >= MIN_PAYOUT_AMOUNT && savedPixKey && !stats.hasPendingRequest && canRequestThisWeek;
 
   return (
     <Card className="gradient-border">
@@ -121,7 +152,7 @@ export const AffiliatePayoutRequest = ({
           Solicitar Saque
         </CardTitle>
         <CardDescription>
-          Solicite o saque dos seus ganhos via PIX
+          Solicite o saque dos seus ganhos via WhatsApp (1x por semana)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -181,6 +212,13 @@ export const AffiliatePayoutRequest = ({
               Você já tem uma solicitação de saque pendente. Aguarde a conclusão para solicitar um novo.
             </AlertDescription>
           </Alert>
+        ) : !canRequestThisWeek ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Você já solicitou um saque esta semana. Aguarde até a próxima semana para solicitar novamente.
+            </AlertDescription>
+          </Alert>
         ) : pendingEarnings < MIN_PAYOUT_AMOUNT ? (
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -220,17 +258,18 @@ export const AffiliatePayoutRequest = ({
             </div>
             
             <Button
-              onClick={handleRequestPayout}
+              onClick={handleRequestPayoutViaWhatsApp}
               disabled={requesting || !canRequestPayout}
-              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              className="w-full bg-primary hover:bg-primary/90"
             >
-              {requesting ? 'Solicitando...' : 'Solicitar Saque'}
+              <MessageCircle className="w-4 h-4 mr-2" />
+              {requesting ? 'Solicitando...' : 'Solicitar via WhatsApp'}
             </Button>
           </div>
         )}
 
         <p className="text-xs text-muted-foreground text-center">
-          Saques são processados em até 3 dias úteis após a solicitação.
+          Saques são processados via WhatsApp. Limite: 1 solicitação por semana.
         </p>
       </CardContent>
     </Card>
