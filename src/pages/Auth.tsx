@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LandingPage } from '@/components/LandingPage';
 import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 import { lovable } from '@/integrations/lovable/index';
+import { translateAuthError } from '@/utils/authErrors';
 import logo from '@/assets/logo.png';
 
 const Auth = () => {
@@ -80,9 +81,7 @@ const Auth = () => {
         if (error) {
           toast({
             title: 'Erro ao entrar',
-            description: error.message === 'Invalid login credentials' 
-              ? 'Email ou senha incorretos' 
-              : error.message,
+            description: translateAuthError(error.message),
             variant: 'destructive',
           });
         } else {
@@ -97,9 +96,7 @@ const Auth = () => {
         if (error) {
           toast({
             title: 'Erro ao cadastrar',
-            description: error.message.includes('already registered')
-              ? 'Este email já está cadastrado'
-              : error.message,
+            description: translateAuthError(error.message),
             variant: 'destructive',
           });
         } else {
