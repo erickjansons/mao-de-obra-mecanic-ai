@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { LandingPage } from '@/components/LandingPage';
+import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 import { lovable } from '@/integrations/lovable/index';
 import logo from '@/assets/logo.png';
 
@@ -203,6 +204,16 @@ const Auth = () => {
                 disabled={isLoading}
               />
             </div>
+
+            {isLogin && (
+              <div className="flex justify-end">
+                <ForgotPasswordDialog>
+                  <Button type="button" variant="link" className="text-xs text-muted-foreground px-0 h-auto">
+                    Esqueci minha senha
+                  </Button>
+                </ForgotPasswordDialog>
+              </div>
+            )}
 
             {!isLogin && (
               <div className="space-y-2">
