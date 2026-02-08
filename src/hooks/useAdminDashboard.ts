@@ -1,0 +1,125 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+
+export interface AdminDashboardData {
+  revenue: {
+    monthly_revenue: number;
+    total_paid_subscriptions: number;
+    revenue_by_month: Record<string, number>;
+  };
+  users: {
+    total: number;
+    premium: number;
+    free: number;
+    details: UserDetail[];
+  };
+  affiliates: {
+    total: number;
+    active: number;
+    total_earnings: number;
+    pending_earnings: number;
+    paid_earnings: number;
+    total_referrals: number;
+    converted_referrals: number;
+    pending_referrals: number;
+    details: AffiliateDetail[];
+  };
+  payouts: {
+    total: number;
+    completed: number;
+    pending: number;
+  };
+  tokens: {
+    total: number;
+    used: number;
+    available: number;
+  };
+}
+
+export interface UserDetail {
+  id: string;
+  email: string;
+  created_at: string;
+  plan_type: string;
+  status: string;
+  current_period_end: string | null;
+}
+
+export interface AffiliateDetail {
+  id: string;
+  email: string;
+  referral_code: string;
+  is_active: boolean;
+  total_earnings: number;
+  pending_earnings: number;
+  paid_earnings: number;
+  total_referrals: number;
+  converted_referrals: number;
+  pending_referrals: number;
+  total_payouts: number;
+  pix_key: string | null;
+  pix_key_type: string | null;
+  created_at: string;
+}
+
+export const useAdminDashboard = () => {
+  const { user } = useAuth();
+  const [data, setData] = useState<AdminDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  const checkAdminRole = useCallback(async () => {
+    if (!user) return false;
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    return !!roleData;
+  }, [user]);
+
+  const fetchDashboard = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const hasAdmin = await checkAdminRole();
+      setIsAdmin(hasAdmin);
+
+      if (!hasAdmin) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: response, error: fnError } = await supabase.functions.invoke(
+        'admin-dashboard'
+      );
+
+      if (fnError) throw fnError;
+      if (response?.error) throw new Error(response.error);
+
+      setData(response);
+    } catch (err: any) {
+      console.error('Admin dashboard error:', err);
+      setError(err.message || 'Erro ao carregar dados');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, checkAdminRole]);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  return { data, loading, error, isAdmin, refetch: fetchDashboard };
+};
