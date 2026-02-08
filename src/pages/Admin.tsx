@@ -13,7 +13,7 @@ import { AdminTokensCard } from '@/components/admin/AdminTokensCard';
 const Admin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { data, loading, error, isAdmin, refetch } = useAdminDashboard();
+  const { data, loading, error, isAdmin, refetch, createTokens, deleteToken } = useAdminDashboard();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -107,7 +107,11 @@ const Admin = () => {
             <TabsContent value="revenue" className="animate-slide-up">
               <AdminRevenueCard
                 monthlyRevenue={data.revenue.monthly_revenue}
+                totalRevenue={data.revenue.total_revenue}
+                directRevenue={data.revenue.direct_revenue}
+                tokenRevenue={data.revenue.token_revenue}
                 totalPaidSubscriptions={data.revenue.total_paid_subscriptions}
+                totalPaidEver={data.revenue.total_paid_ever}
                 revenueByMonth={data.revenue.revenue_by_month}
               />
             </TabsContent>
@@ -140,6 +144,9 @@ const Admin = () => {
                 total={data.tokens.total}
                 used={data.tokens.used}
                 available={data.tokens.available}
+                details={data.tokens.details}
+                onCreateTokens={createTokens}
+                onDeleteToken={deleteToken}
               />
             </TabsContent>
           </Tabs>

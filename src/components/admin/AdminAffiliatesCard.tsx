@@ -106,7 +106,7 @@ export const AdminAffiliatesCard = ({
                           {affiliate.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="grid grid-cols-2 gap-2 text-center text-xs">
                         <div>
                           <p className="font-bold text-primary">{affiliate.total_referrals}</p>
                           <p className="text-muted-foreground">Indicações</p>
@@ -116,9 +116,18 @@ export const AdminAffiliatesCard = ({
                           <p className="text-muted-foreground">Convertidas</p>
                         </div>
                         <div>
-                          <p className="font-bold text-accent">R$ {affiliate.total_earnings.toFixed(2)}</p>
-                          <p className="text-muted-foreground">Ganhos</p>
+                          <p className="font-bold text-warning">R$ {affiliate.pending_earnings.toFixed(2)}</p>
+                          <p className="text-muted-foreground">Saldo</p>
                         </div>
+                        <div>
+                          <p className="font-bold text-accent">R$ {affiliate.paid_earnings.toFixed(2)}</p>
+                          <p className="text-muted-foreground">Pago</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-border/50">
+                        <p className="text-xs text-muted-foreground">
+                          Total ganhos: <span className="font-semibold text-foreground">R$ {affiliate.total_earnings.toFixed(2)}</span>
+                        </p>
                       </div>
                       {affiliate.pix_key && (
                         <p className="text-xs text-muted-foreground mt-2">

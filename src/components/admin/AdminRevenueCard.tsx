@@ -1,24 +1,54 @@
-import { DollarSign, TrendingUp, CreditCard } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Ticket, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
   monthlyRevenue: number;
+  totalRevenue: number;
+  directRevenue: number;
+  tokenRevenue: number;
   totalPaidSubscriptions: number;
+  totalPaidEver: number;
   revenueByMonth: Record<string, number>;
 }
 
-export const AdminRevenueCard = ({ monthlyRevenue, totalPaidSubscriptions, revenueByMonth }: Props) => {
+export const AdminRevenueCard = ({
+  monthlyRevenue,
+  totalRevenue,
+  directRevenue,
+  tokenRevenue,
+  totalPaidSubscriptions,
+  totalPaidEver,
+  revenueByMonth,
+}: Props) => {
   const chartData = Object.entries(revenueByMonth)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-6)
     .map(([month, value]) => ({
-      month: month.substring(5), // MM only
+      month: month.substring(5),
       valor: Number(value.toFixed(2)),
     }));
 
   return (
     <div className="space-y-4">
+      {/* Total revenue highlight */}
+      <Card className="bg-gradient-to-r from-success/10 to-primary/10 border-success/20">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Receita Total (planos pagos)</p>
+              <p className="text-3xl font-bold text-success">R$ {totalRevenue.toFixed(2)}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-success to-emerald-500 flex items-center justify-center">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {totalPaidEver} plano(s) pago(s) no total • Gratuito não contabiliza
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 gap-3">
         <Card className="gradient-border">
           <CardContent className="p-4 text-center">
@@ -28,7 +58,7 @@ export const AdminRevenueCard = ({ monthlyRevenue, totalPaidSubscriptions, reven
             <p className="text-2xl font-bold text-success">
               R$ {monthlyRevenue.toFixed(2)}
             </p>
-            <p className="text-xs text-muted-foreground">Receita Mensal</p>
+            <p className="text-xs text-muted-foreground">Receita Mensal Ativa</p>
           </CardContent>
         </Card>
 
@@ -39,6 +69,30 @@ export const AdminRevenueCard = ({ monthlyRevenue, totalPaidSubscriptions, reven
             </div>
             <p className="text-2xl font-bold text-primary">{totalPaidSubscriptions}</p>
             <p className="text-xs text-muted-foreground">Assinaturas Ativas</p>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-border">
+          <CardContent className="p-4 text-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent to-accent/80 mx-auto mb-2 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-accent">
+              R$ {directRevenue.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">Via Pagamento Direto</p>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-border">
+          <CardContent className="p-4 text-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning to-orange-500 mx-auto mb-2 flex items-center justify-center">
+              <Ticket className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-warning">
+              R$ {tokenRevenue.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">Via Tokens</p>
           </CardContent>
         </Card>
       </div>
