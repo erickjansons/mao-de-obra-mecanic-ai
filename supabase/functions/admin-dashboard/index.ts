@@ -107,6 +107,19 @@ serve(async (req) => {
     const usedTokens = tokens.filter((t: any) => t.is_used).length;
     const availableTokens = totalTokens - usedTokens;
 
+    // Token details for admin
+    const tokenDetails = tokens.map((t: any) => ({
+      id: t.id,
+      token: t.token,
+      is_used: t.is_used,
+      used_by: t.used_by,
+      used_at: t.used_at,
+      created_at: t.created_at,
+      used_by_email: t.used_by
+        ? users.find((u: any) => u.id === t.used_by)?.email || "N/A"
+        : null,
+    }));
+
     // Payout metrics
     const totalPayouts = payouts.length;
     const completedPayouts = payouts.filter((p: any) => p.status === "completed").length;
@@ -149,11 +162,25 @@ serve(async (req) => {
       };
     });
 
+    // Revenue calculations - only paid plans count
+    const paidSubscriptions = subscriptions.filter(
+      (s: any) => s.plan_type !== "free"
+    );
+
+    // Total revenue ever (all paid subscriptions * 9.99)
+    const totalRevenue = paidSubscriptions.length * 9.99;
+
+    // Revenue via tokens (tokens redeemed = plan activations)
+    const tokenRevenue = usedTokens * 9.99;
+
+    // Revenue via direct payment
+    const directRevenue = totalRevenue - tokenRevenue;
+
     // Monthly revenue history (subscriptions by month)
     const revenueByMonth: Record<string, number> = {};
-    subscriptions.forEach((s: any) => {
-      if (s.status === "active" && s.plan_type !== "free" && s.current_period_start) {
-        const month = s.current_period_start.substring(0, 7); // YYYY-MM
+    paidSubscriptions.forEach((s: any) => {
+      if (s.current_period_start) {
+        const month = s.current_period_start.substring(0, 7);
         revenueByMonth[month] = (revenueByMonth[month] || 0) + 9.99;
       }
     });
@@ -161,7 +188,11 @@ serve(async (req) => {
     const response = {
       revenue: {
         monthly_revenue: monthlyRevenue,
+        total_revenue: totalRevenue,
+        direct_revenue: directRevenue,
+        token_revenue: tokenRevenue,
         total_paid_subscriptions: totalPaidSubscriptions,
+        total_paid_ever: paidSubscriptions.length,
         revenue_by_month: revenueByMonth,
       },
       users: {
@@ -190,6 +221,7 @@ serve(async (req) => {
         total: totalTokens,
         used: usedTokens,
         available: availableTokens,
+        details: tokenDetails,
       },
     };
 

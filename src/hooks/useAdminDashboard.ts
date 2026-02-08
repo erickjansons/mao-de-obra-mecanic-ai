@@ -5,7 +5,11 @@ import { useAuth } from './useAuth';
 export interface AdminDashboardData {
   revenue: {
     monthly_revenue: number;
+    total_revenue: number;
+    direct_revenue: number;
+    token_revenue: number;
     total_paid_subscriptions: number;
+    total_paid_ever: number;
     revenue_by_month: Record<string, number>;
   };
   users: {
@@ -34,6 +38,7 @@ export interface AdminDashboardData {
     total: number;
     used: number;
     available: number;
+    details: TokenDetail[];
   };
 }
 
@@ -61,6 +66,16 @@ export interface AffiliateDetail {
   pix_key: string | null;
   pix_key_type: string | null;
   created_at: string;
+}
+
+export interface TokenDetail {
+  id: string;
+  token: string;
+  is_used: boolean;
+  used_by: string | null;
+  used_at: string | null;
+  created_at: string;
+  used_by_email: string | null;
 }
 
 export const useAdminDashboard = () => {
@@ -117,9 +132,31 @@ export const useAdminDashboard = () => {
     }
   }, [user, checkAdminRole]);
 
+  const createTokens = useCallback(async (tokens: string[]) => {
+    const { data: response, error: fnError } = await supabase.functions.invoke(
+      'manage-tokens',
+      { body: { action: 'create', tokens } }
+    );
+    if (fnError) throw fnError;
+    if (response?.error) throw new Error(response.error);
+    await fetchDashboard();
+    return response;
+  }, [fetchDashboard]);
+
+  const deleteToken = useCallback(async (tokenId: string) => {
+    const { data: response, error: fnError } = await supabase.functions.invoke(
+      'manage-tokens',
+      { body: { action: 'delete', token_id: tokenId } }
+    );
+    if (fnError) throw fnError;
+    if (response?.error) throw new Error(response.error);
+    await fetchDashboard();
+    return response;
+  }, [fetchDashboard]);
+
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  return { data, loading, error, isAdmin, refetch: fetchDashboard };
+  return { data, loading, error, isAdmin, refetch: fetchDashboard, createTokens, deleteToken };
 };
