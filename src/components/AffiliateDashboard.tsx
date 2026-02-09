@@ -1,4 +1,4 @@
-import { Users, DollarSign, Clock, CheckCircle, Copy, Share2, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, Clock, CheckCircle, Copy, Share2, TrendingUp, User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAffiliate } from '@/hooks/useAffiliate';
@@ -18,6 +18,7 @@ export const AffiliateDashboard = () => {
     becomeAffiliate, 
     getAffiliateLink, 
     copyAffiliateLink,
+    getReferredName,
     refetch,
   } = useAffiliate();
 
@@ -39,7 +40,7 @@ export const AffiliateDashboard = () => {
             </div>
             <CardTitle className="text-2xl">Programa de Afiliados</CardTitle>
             <CardDescription className="text-base mt-2">
-              Ganhe <span className="text-primary font-bold">50% de comissão</span> em cada assinatura!
+              Ganhe <span className="text-primary font-bold">50% de comissão recorrente</span> em cada pagamento!
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -52,15 +53,15 @@ export const AffiliateDashboard = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                  <span>Quando alguém assinar pelo seu link, você ganha 50%</span>
+                  <span>Quando alguém assinar pelo seu link, você ganha 50% <strong>em cada pagamento</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                  <span>Acompanhe suas indicações em tempo real</span>
+                  <span>A comissão é recorrente: você ganha toda vez que seu indicado pagar</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                  <span>Receba seus ganhos direto na sua conta</span>
+                  <span>Receba seus ganhos direto na sua conta via PIX</span>
                 </li>
               </ul>
             </div>
@@ -85,6 +86,17 @@ export const AffiliateDashboard = () => {
       </div>
     );
   }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-success">Ativo</Badge>;
+      case 'converted':
+        return <Badge className="bg-success">Convertido</Badge>;
+      default:
+        return <Badge variant="secondary">Pendente</Badge>;
+    }
+  };
 
   return (
     <div className="animate-slide-up space-y-4">
@@ -129,7 +141,7 @@ export const AffiliateDashboard = () => {
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
             <p className="text-2xl font-bold text-success">{stats.convertedReferrals}</p>
-            <p className="text-xs text-muted-foreground">Convertidas</p>
+            <p className="text-xs text-muted-foreground">Ativos</p>
           </CardContent>
         </Card>
 
@@ -159,9 +171,9 @@ export const AffiliateDashboard = () => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-lg">Comissão: 50%</p>
+              <p className="font-semibold text-lg">Comissão: 50% Recorrente</p>
               <p className="text-xs text-muted-foreground">
-                *Valor líquido após taxas: ~45%
+                *Valor líquido após taxas: ~45% por pagamento
               </p>
             </div>
             <div className="text-right">
@@ -187,8 +199,8 @@ export const AffiliateDashboard = () => {
       {/* Referrals List */}
       <Card className="gradient-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Suas Indicações</CardTitle>
-          <CardDescription>Histórico de pessoas que se cadastraram pelo seu link</CardDescription>
+          <CardTitle className="text-lg">Seus Indicados</CardTitle>
+          <CardDescription>Pessoas que se cadastraram pelo seu link (comissão recorrente)</CardDescription>
         </CardHeader>
         <CardContent>
           {referrals.length === 0 ? (
@@ -198,35 +210,32 @@ export const AffiliateDashboard = () => {
               <p className="text-sm">Compartilhe seu link para começar a ganhar!</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Comissão</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {referrals.map((referral) => (
-                  <TableRow key={referral.id}>
-                    <TableCell className="text-sm">
-                      {format(new Date(referral.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={referral.status === 'converted' ? 'default' : 'secondary'}
-                        className={referral.status === 'converted' ? 'bg-success' : ''}
-                      >
-                        {referral.status === 'converted' ? 'Convertido' : 'Pendente'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      R$ {referral.commission_amount.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-3">
+              {referrals.map((referral) => (
+                <Card key={referral.id} className="bg-secondary/50">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <User className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">{getReferredName(referral.referred_email)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Desde {format(new Date(referral.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                      {getStatusBadge(referral.status)}
+                    </div>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground">Comissão acumulada</p>
+                      <p className="text-sm font-bold text-success">R$ {referral.commission_amount.toFixed(2)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

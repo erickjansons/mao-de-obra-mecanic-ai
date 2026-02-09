@@ -29,30 +29,29 @@ serve(async (req) => {
       );
     }
 
-    // Find the referral for this user
+    // Find any referral for this user (active, pending, or converted - permanent link)
     const { data: referral, error: referralError } = await supabase
       .from('referrals')
       .select('*, affiliates(*)')
       .eq('referred_user_id', userId)
-      .eq('status', 'pending')
+      .in('status', ['active', 'pending', 'converted'])
       .single();
 
     if (referralError || !referral) {
-      // No pending referral for this user, that's okay
       return new Response(
-        JSON.stringify({ message: 'No pending referral found' }),
+        JSON.stringify({ message: 'No referral found' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const commissionAmount = subscriptionAmount * COMMISSION_RATE;
 
-    // Update the referral to converted
+    // Update the referral: increment commission and set status to 'active'
     const { error: updateReferralError } = await supabase
       .from('referrals')
       .update({
-        status: 'converted',
-        commission_amount: commissionAmount,
+        status: 'active',
+        commission_amount: (referral.commission_amount || 0) + commissionAmount,
         converted_at: new Date().toISOString(),
       })
       .eq('id', referral.id);

@@ -7,6 +7,51 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const COMMISSION_RATE = 0.45;
+const PLAN_VALUE = 9.99;
+
+async function processAffiliateCommission(supabaseAdmin: any, userId: string, paymentAmount: number) {
+  try {
+    // Find referral for this user (any active referral - permanent link)
+    const { data: referral, error: refError } = await supabaseAdmin
+      .from('referrals')
+      .select('*, affiliates(*)')
+      .eq('referred_user_id', userId)
+      .in('status', ['active', 'pending', 'converted'])
+      .single();
+
+    if (refError || !referral) {
+      console.log('No referral found for user:', userId);
+      return;
+    }
+
+    const commissionAmount = paymentAmount * COMMISSION_RATE;
+
+    // Update referral: increment commission and ensure status is 'active'
+    await supabaseAdmin
+      .from('referrals')
+      .update({
+        status: 'active',
+        commission_amount: (referral.commission_amount || 0) + commissionAmount,
+        converted_at: new Date().toISOString(),
+      })
+      .eq('id', referral.id);
+
+    // Update the affiliate's earnings
+    await supabaseAdmin
+      .from('affiliates')
+      .update({
+        total_earnings: (referral.affiliates.total_earnings || 0) + commissionAmount,
+        pending_earnings: (referral.affiliates.pending_earnings || 0) + commissionAmount,
+      })
+      .eq('id', referral.affiliate_id);
+
+    console.log(`Recurring commission processed: R$ ${commissionAmount.toFixed(2)} for affiliate ${referral.affiliate_id} (user ${userId})`);
+  } catch (err) {
+    console.error('Error processing affiliate commission:', err);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -133,6 +178,9 @@ serve(async (req) => {
             console.log("Subscription created successfully");
           }
         }
+
+        // Process recurring affiliate commission
+        await processAffiliateCommission(supabaseAdmin, userId, PLAN_VALUE);
       }
     }
 
