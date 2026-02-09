@@ -95,7 +95,8 @@ export const AdminUsersCard = ({ total, premium, free, details }: Props) => {
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Plano</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead>Início</TableHead>
+                  <TableHead>Fim</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,7 +117,14 @@ export const AdminUsersCard = ({ total, premium, free, details }: Props) => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {format(new Date(user.created_at), 'dd/MM/yy', { locale: ptBR })}
+                        {user.current_period_start
+                          ? format(new Date(user.current_period_start), 'dd/MM/yy', { locale: ptBR })
+                          : '—'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {user.current_period_end
+                          ? format(new Date(user.current_period_end), 'dd/MM/yy', { locale: ptBR })
+                          : '—'}
                       </TableCell>
                     </TableRow>
                   ))}

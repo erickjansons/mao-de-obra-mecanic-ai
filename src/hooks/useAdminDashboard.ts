@@ -48,6 +48,7 @@ export interface UserDetail {
   created_at: string;
   plan_type: string;
   status: string;
+  current_period_start: string | null;
   current_period_end: string | null;
 }
 
