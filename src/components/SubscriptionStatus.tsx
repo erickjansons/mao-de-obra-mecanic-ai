@@ -19,7 +19,8 @@ export const SubscriptionStatus = () => {
 
   const endDate = parseISO(subscription.current_period_end);
   const now = new Date();
-  const daysRemaining = differenceInDays(endDate, now);
+  const diffMs = endDate.getTime() - now.getTime();
+  const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   const getStatusColor = () => {
     if (daysRemaining <= 0) return 'text-destructive';
