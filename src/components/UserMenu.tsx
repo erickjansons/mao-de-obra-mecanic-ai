@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -56,6 +56,12 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {user.email === 'erickjansons@gmail.com' && (
+          <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+            <Shield className="w-4 h-4 mr-2 text-primary" />
+            Painel Admin
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
           <LogOut className="w-4 h-4 mr-2" />
           Sair
