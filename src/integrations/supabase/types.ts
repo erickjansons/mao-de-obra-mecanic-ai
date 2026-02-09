@@ -170,6 +170,7 @@ export type Database = {
           converted_at: string | null
           created_at: string
           id: string
+          referred_email: string | null
           referred_user_id: string
           status: string
         }
@@ -179,6 +180,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referred_email?: string | null
           referred_user_id: string
           status?: string
         }
@@ -188,6 +190,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referred_email?: string | null
           referred_user_id?: string
           status?: string
         }

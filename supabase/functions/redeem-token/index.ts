@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const TOKEN_VALUE = 9.99;
+const COMMISSION_RATE = 0.45;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +26,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Get user from token
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -46,8 +48,6 @@ Deno.serve(async (req) => {
     }
 
     const cleanToken = token.trim();
-
-    // Use service role to manage tokens
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if token exists and is not used
@@ -106,14 +106,9 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const periodEnd = new Date(now);
-    periodEnd.setDate(periodEnd.getDate() + 30); // 30 days access
-
-    // Token value for commission calculation (same as monthly plan)
-    const TOKEN_VALUE = 9.99;
-    const COMMISSION_RATE = 0.45;
+    periodEnd.setDate(periodEnd.getDate() + 30);
 
     if (existingSub) {
-      // Update existing subscription
       const { error: subError } = await adminClient
         .from('subscriptions')
         .update({
@@ -133,7 +128,6 @@ Deno.serve(async (req) => {
         );
       }
     } else {
-      // Create new subscription
       const { error: subError } = await adminClient
         .from('subscriptions')
         .insert({
@@ -153,24 +147,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Process affiliate commission if user was referred
+    // Process recurring affiliate commission
     try {
       const { data: referral } = await adminClient
         .from('referrals')
         .select('*, affiliates(*)')
         .eq('referred_user_id', user.id)
-        .eq('status', 'pending')
-        .maybeSingle();
+        .in('status', ['active', 'pending', 'converted'])
+        .single();
 
       if (referral) {
         const commissionAmount = TOKEN_VALUE * COMMISSION_RATE;
 
-        // Update the referral to converted
+        // Update referral: increment commission and ensure status is 'active'
         await adminClient
           .from('referrals')
           .update({
-            status: 'converted',
-            commission_amount: commissionAmount,
+            status: 'active',
+            commission_amount: (referral.commission_amount || 0) + commissionAmount,
             converted_at: now.toISOString(),
           })
           .eq('id', referral.id);
@@ -184,10 +178,9 @@ Deno.serve(async (req) => {
           })
           .eq('id', referral.affiliate_id);
 
-        console.log(`Affiliate commission processed: R$ ${commissionAmount.toFixed(2)} for referral ${referral.id}`);
+        console.log(`Recurring commission processed: R$ ${commissionAmount.toFixed(2)} for referral ${referral.id}`);
       }
     } catch (affiliateError) {
-      // Log but don't fail the token redemption if affiliate processing fails
       console.error('Error processing affiliate commission:', affiliateError);
     }
 

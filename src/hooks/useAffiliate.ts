@@ -24,6 +24,7 @@ interface Referral {
   commission_amount: number;
   created_at: string;
   converted_at: string | null;
+  referred_email: string | null;
 }
 
 export const useAffiliate = () => {
@@ -66,7 +67,7 @@ export const useAffiliate = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReferrals(data || []);
+      setReferrals((data as Referral[]) || []);
     } catch (error) {
       console.error('Error fetching referrals:', error);
     }
@@ -76,7 +77,6 @@ export const useAffiliate = () => {
     if (!user) return;
 
     try {
-      // Generate a unique referral code
       const { data: codeData, error: codeError } = await supabase
         .rpc('generate_referral_code');
 
@@ -132,6 +132,13 @@ export const useAffiliate = () => {
     }
   };
 
+  const getReferredName = (email: string | null): string => {
+    if (!email) return 'Usuário';
+    const namePart = email.split('@')[0];
+    // Capitalize first letter
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+  };
+
   useEffect(() => {
     fetchAffiliate();
   }, [user]);
@@ -144,7 +151,7 @@ export const useAffiliate = () => {
 
   const stats = {
     totalReferrals: referrals.length,
-    convertedReferrals: referrals.filter(r => r.status === 'converted').length,
+    convertedReferrals: referrals.filter(r => r.status === 'active' || r.status === 'converted').length,
     pendingReferrals: referrals.filter(r => r.status === 'pending').length,
     totalEarnings: affiliate?.total_earnings || 0,
     pendingEarnings: affiliate?.pending_earnings || 0,
@@ -159,6 +166,7 @@ export const useAffiliate = () => {
     becomeAffiliate,
     getAffiliateLink,
     copyAffiliateLink,
+    getReferredName,
     refetch: fetchAffiliate,
   };
 };

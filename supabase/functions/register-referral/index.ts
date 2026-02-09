@@ -63,14 +63,27 @@ serve(async (req) => {
       );
     }
 
-    // Create the referral
+    // Get the referred user's email from profiles
+    let referredEmail: string | null = null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('user_id', userId)
+      .single();
+
+    if (profile?.email) {
+      referredEmail = profile.email;
+    }
+
+    // Create the referral with status 'active' (permanent link)
     const { data: referral, error: referralError } = await supabase
       .from('referrals')
       .insert({
         affiliate_id: affiliate.id,
         referred_user_id: userId,
-        status: 'pending',
+        status: 'active',
         commission_amount: 0,
+        referred_email: referredEmail,
       })
       .select()
       .single();
