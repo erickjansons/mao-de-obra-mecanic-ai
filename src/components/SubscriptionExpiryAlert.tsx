@@ -17,8 +17,9 @@ export const SubscriptionExpiryAlert = ({ onRenew }: SubscriptionExpiryAlertProp
 
   const endDate = parseISO(subscription.current_period_end);
   const now = new Date();
-  const daysRemaining = differenceInDays(endDate, now);
-  const hoursRemaining = differenceInHours(endDate, now);
+  const diffMs = endDate.getTime() - now.getTime();
+  const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const hoursRemaining = Math.ceil(diffMs / (1000 * 60 * 60));
 
   // Only show if 3 days or less remaining
   if (daysRemaining > 3) {
