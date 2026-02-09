@@ -68,8 +68,16 @@ serve(async (req) => {
     const tokens = tokensRes.data || [];
     const users = usersRes.data?.users || [];
 
+    // Build a set of existing user IDs for quick lookup
+    const userIds = new Set(users.map((u: any) => u.id));
+
+    // Only count subscriptions that belong to existing users
+    const validSubscriptions = subscriptions.filter(
+      (s: any) => userIds.has(s.user_id)
+    );
+
     // Calculate revenue metrics
-    const activeSubscriptions = subscriptions.filter(
+    const activeSubscriptions = validSubscriptions.filter(
       (s: any) => s.status === "active" && s.plan_type !== "free"
     );
     const monthlyRevenue = activeSubscriptions.filter(
@@ -79,9 +87,7 @@ serve(async (req) => {
 
     // Users metrics
     const totalUsers = users.length;
-    const usersWithSubscription = subscriptions.filter(
-      (s: any) => s.status === "active" && s.plan_type !== "free"
-    ).length;
+    const usersWithSubscription = activeSubscriptions.length;
     const freeUsers = totalUsers - usersWithSubscription;
 
     // Affiliate metrics
@@ -163,8 +169,8 @@ serve(async (req) => {
       };
     });
 
-    // Revenue calculations - only paid plans count
-    const paidSubscriptions = subscriptions.filter(
+    // Revenue calculations - only paid plans from existing users count
+    const paidSubscriptions = validSubscriptions.filter(
       (s: any) => s.plan_type !== "free"
     );
 
