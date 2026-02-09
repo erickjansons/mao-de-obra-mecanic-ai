@@ -99,8 +99,8 @@ serve(async (req) => {
 
     // Referral metrics
     const totalReferrals = referrals.length;
-    const convertedReferrals = referrals.filter((r: any) => r.status === "converted").length;
-    const pendingReferrals = referrals.filter((r: any) => r.status === "pending").length;
+    const convertedReferrals = referrals.filter((r: any) => r.status === "converted" || (r.converted_at && r.commission_amount > 0)).length;
+    const pendingReferrals = referrals.filter((r: any) => r.status === "pending" || (r.status === "active" && !r.converted_at && r.commission_amount <= 0)).length;
 
     // Token metrics
     const totalTokens = tokens.length;
@@ -140,8 +140,8 @@ serve(async (req) => {
         pending_earnings: Number(a.pending_earnings || 0),
         paid_earnings: Number(a.paid_earnings || 0),
         total_referrals: affiliateReferrals.length,
-        converted_referrals: affiliateReferrals.filter((r: any) => r.status === "converted").length,
-        pending_referrals: affiliateReferrals.filter((r: any) => r.status === "pending").length,
+        converted_referrals: affiliateReferrals.filter((r: any) => r.status === "converted" || (r.converted_at && r.commission_amount > 0)).length,
+        pending_referrals: affiliateReferrals.filter((r: any) => r.status === "pending" || (r.status === "active" && !r.converted_at && r.commission_amount <= 0)).length,
         total_payouts: affiliatePayouts.length,
         pix_key: a.pix_key,
         pix_key_type: a.pix_key_type,
