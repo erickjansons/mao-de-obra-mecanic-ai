@@ -111,6 +111,7 @@ serve(async (req) => {
     // Token metrics
     const totalTokens = tokens.length;
     const usedTokens = tokens.filter((t: any) => t.is_used).length;
+    const validUsedTokens = tokens.filter((t: any) => t.is_used && t.used_by && userIds.has(t.used_by)).length;
     const availableTokens = totalTokens - usedTokens;
 
     // Token details for admin
@@ -177,8 +178,8 @@ serve(async (req) => {
     // Total revenue ever (all paid subscriptions * 9.99)
     const totalRevenue = paidSubscriptions.length * 9.99;
 
-    // Revenue via tokens (tokens redeemed = plan activations)
-    const tokenRevenue = usedTokens * 9.99;
+    // Revenue via tokens (only tokens redeemed by existing users)
+    const tokenRevenue = validUsedTokens * 9.99;
 
     // Revenue via direct payment
     const directRevenue = totalRevenue - tokenRevenue;
