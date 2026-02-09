@@ -10,6 +10,7 @@ import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { SubscriptionExpiryAlert } from '@/components/SubscriptionExpiryAlert';
 import { MechanicChat } from '@/components/MechanicChat';
 import { AffiliateDashboard } from '@/components/AffiliateDashboard';
+import { MyAppsCarousel } from '@/components/MyAppsCarousel';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -135,6 +136,7 @@ const Index = () => {
               onSubmit={handleAddService} 
               onSuccess={() => setActiveTab('dashboard')}
             />
+            <MyAppsCarousel />
           </>
         )}
         
