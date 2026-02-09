@@ -158,6 +158,7 @@ serve(async (req) => {
         created_at: u.created_at,
         plan_type: userSub?.plan_type || "free",
         status: userSub?.status || "free",
+        current_period_start: userSub?.current_period_start || null,
         current_period_end: userSub?.current_period_end || null,
       };
     });
