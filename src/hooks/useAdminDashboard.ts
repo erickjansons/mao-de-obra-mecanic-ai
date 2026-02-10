@@ -117,6 +117,12 @@ export const useAdminDashboard = () => {
         return;
       }
 
+      // Ensure we have a valid session before calling the edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
       const { data: response, error: fnError } = await supabase.functions.invoke(
         'admin-dashboard'
       );
