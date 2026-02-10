@@ -18,17 +18,30 @@ export const usePlateExtraction = () => {
 
   const compressImage = (base64: string, maxWidth = 1280, quality = 0.6): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ratio = Math.min(maxWidth / img.width, 1);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = base64;
+      try {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const ratio = Math.min(maxWidth / img.width, 1);
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(base64);
+              return;
+            }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } catch {
+            resolve(base64);
+          }
+        };
+        img.onerror = () => resolve(base64);
+        img.src = base64;
+      } catch {
+        resolve(base64);
+      }
     });
   };
 
@@ -36,7 +49,12 @@ export const usePlateExtraction = () => {
     setIsExtracting(true);
     
     try {
-      const compressed = await compressImage(imageBase64);
+      let compressed: string;
+      try {
+        compressed = await compressImage(imageBase64);
+      } catch {
+        compressed = imageBase64;
+      }
       const { data, error } = await supabase.functions.invoke('extract-plate-info', {
         body: { imageBase64: compressed }
       });
@@ -122,29 +140,36 @@ export const usePlateExtraction = () => {
 
   const captureImage = (): Promise<string | null> => {
     return new Promise((resolve) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-      
-      input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) {
-          resolve(null);
-          return;
-        }
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        input.onchange = (e) => {
+          try {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) {
+              resolve(null);
+              return;
+            }
 
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result);
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result);
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+          } catch {
+            resolve(null);
+          }
         };
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      };
 
-      input.oncancel = () => resolve(null);
-      input.click();
+        input.oncancel = () => resolve(null);
+        input.click();
+      } catch {
+        resolve(null);
+      }
     });
   };
 
