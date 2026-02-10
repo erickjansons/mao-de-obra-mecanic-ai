@@ -34,45 +34,14 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-flash-lite',
         messages: [
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Você é um especialista em identificação de veículos brasileiros. Analise cuidadosamente esta imagem e extraia TODAS as informações disponíveis.
-
-A imagem pode ser:
-- Uma foto da placa do veículo
-- Uma foto do veículo inteiro
-- Um documento do veículo (CRLV, CRV, nota fiscal)
-- Uma combinação dessas opções
-
-EXTRAIA AS SEGUINTES INFORMAÇÕES:
-
-1. **PLACA**: Identifique a placa do veículo (formato ABC-1234 ou ABC1D23 Mercosul). PRIORIDADE MÁXIMA.
-
-2. **VEÍCULO**: Identifique MARCA + MODELO + ANO. 
-   - Observe detalhes visuais do carro para determinar o modelo exato
-   - Observe o design, faróis, grade, ano-modelo baseado no estilo
-   - Se for um documento, leia o ano do modelo/fabricação
-   - SEMPRE inclua o ano se conseguir identificar (ex: "Honda Civic 2020", "Fiat Uno 2015", "Chevrolet Onix 2019")
-   - Se não conseguir determinar o ano exato, estime baseado no design do veículo
-
-3. **CLIENTE/PROPRIETÁRIO**: Se a imagem for um documento (CRLV, CRV, etc.), extraia o nome do proprietário que aparece no documento.
-
-Data de hoje: ${today}
-
-REGRAS:
-- Foque em extrair dados REAIS visíveis na imagem
-- Para o veículo, SEMPRE tente incluir o ano - é muito importante
-- Se for documento, leia o nome do proprietário
-- Não invente informações que não estão visíveis
-- Se não conseguir identificar um campo, retorne string vazia
-
-RESPONDA APENAS com o JSON abaixo (sem markdown, sem explicações, sem crases):
-{"placa": "ABC1234", "veiculo": "Marca Modelo Ano", "data_servico": "${today}", "cliente": "Nome do Proprietário"}`
+                text: `Extraia da imagem: placa (ABC1234 ou ABC1D23), marca+modelo+ano do veículo, e nome do proprietário se for documento. Data: ${today}. Responda APENAS JSON: {"placa":"","veiculo":"","data_servico":"${today}","cliente":""}`
               },
               {
                 type: 'image_url',

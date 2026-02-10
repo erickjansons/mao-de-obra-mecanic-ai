@@ -16,12 +16,29 @@ export const usePlateExtraction = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const { toast } = useToast();
 
+  const compressImage = (base64: string, maxWidth = 1280, quality = 0.6): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(maxWidth / img.width, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = base64;
+    });
+  };
+
   const extractFromImage = async (imageBase64: string): Promise<ExtractedData | null> => {
     setIsExtracting(true);
     
     try {
+      const compressed = await compressImage(imageBase64);
       const { data, error } = await supabase.functions.invoke('extract-plate-info', {
-        body: { imageBase64 }
+        body: { imageBase64: compressed }
       });
 
       if (error) {
