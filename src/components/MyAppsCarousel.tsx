@@ -13,7 +13,7 @@ interface AppItem {
 const apps: AppItem[] = [
   {
     name: 'Orçamento Automotivo',
-    description: 'Crie orçamentos profissionais para seus clientes',
+    description: '100% Gratuito • Crie orçamentos profissionais para seus clientes',
     url: 'https://mecanic-ai-orcamentos.lovable.app/',
     emoji: '🧾',
     gradient: 'from-blue-600 to-cyan-500',
