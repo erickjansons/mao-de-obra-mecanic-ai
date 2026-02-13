@@ -90,6 +90,15 @@ serve(async (req) => {
     const usersWithSubscription = activeSubscriptions.length;
     const freeUsers = totalUsers - usersWithSubscription;
 
+    // Renewed subscriptions: current_period_start is significantly after created_at
+    const renewedSubscriptions = activeSubscriptions.filter((s: any) => {
+      if (!s.current_period_start || !s.created_at) return false;
+      const created = new Date(s.created_at).getTime();
+      const periodStart = new Date(s.current_period_start).getTime();
+      const diffDays = (periodStart - created) / (1000 * 60 * 60 * 24);
+      return diffDays > 2; // More than 2 days difference = renewed
+    }).length;
+
     // Affiliate metrics
     const totalAffiliates = affiliates.length;
     const activeAffiliates = affiliates.filter((a: any) => a.is_active).length;
@@ -207,6 +216,7 @@ serve(async (req) => {
         total: totalUsers,
         premium: usersWithSubscription,
         free: freeUsers,
+        renewed: renewedSubscriptions,
         details: userDetails,
       },
       affiliates: {
