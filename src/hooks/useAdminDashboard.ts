@@ -16,6 +16,7 @@ export interface AdminDashboardData {
     total: number;
     premium: number;
     free: number;
+    renewed: number;
     details: UserDetail[];
   };
   affiliates: {
