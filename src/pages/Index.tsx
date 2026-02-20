@@ -108,7 +108,7 @@ const Index = () => {
       
       <main className="px-3 py-4">
         {/* Subscription Expiry Alert - shown on all tabs for premium users */}
-        <SubscriptionExpiryAlert onRenew={() => setActiveTab('planos')} />
+        <SubscriptionExpiryAlert />
         
         {activeTab === 'dashboard' && (
           <>
