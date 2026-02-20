@@ -1,15 +1,16 @@
+import { useState } from 'react';
 import { Clock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSubscription } from '@/hooks/useSubscription';
-import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { PixPaymentDialog } from './PixPaymentDialog';
+import { useToast } from '@/hooks/use-toast';
 
-interface SubscriptionExpiryAlertProps {
-  onRenew: () => void;
-}
-
-export const SubscriptionExpiryAlert = ({ onRenew }: SubscriptionExpiryAlertProps) => {
-  const { subscription, isPremium } = useSubscription();
+export const SubscriptionExpiryAlert = () => {
+  const { subscription, isPremium, refetch } = useSubscription();
+  const [pixDialogOpen, setPixDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   if (!isPremium() || !subscription?.current_period_end) {
     return null;
@@ -39,29 +40,45 @@ export const SubscriptionExpiryAlert = ({ onRenew }: SubscriptionExpiryAlertProp
     return `Seu plano expira em ${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'}!`;
   };
 
+  const handlePaymentSuccess = () => {
+    refetch();
+    toast({
+      title: '🎉 Assinatura renovada!',
+      description: 'Sua assinatura foi renovada com sucesso.',
+    });
+  };
+
   return (
-    <Card className={`mb-4 border-2 ${isExpired ? 'border-destructive bg-destructive/10' : 'border-warning bg-warning/10'}`}>
-      <CardContent className="py-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <Clock className={`h-5 w-5 ${isExpired ? 'text-destructive' : 'text-warning'}`} />
-            <div>
-              <p className="font-semibold">
-                {getMessage()}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {isExpired 
-                  ? 'Seus recursos premium estão desativados.' 
-                  : 'Renove agora para não perder o acesso.'}
-              </p>
+    <>
+      <Card className={`mb-4 border-2 ${isExpired ? 'border-destructive bg-destructive/10' : 'border-warning bg-warning/10'}`}>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Clock className={`h-5 w-5 ${isExpired ? 'text-destructive' : 'text-warning'}`} />
+              <div>
+                <p className="font-semibold">
+                  {getMessage()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isExpired 
+                    ? 'Seus recursos premium estão desativados.' 
+                    : 'Renove agora para não perder o acesso.'}
+                </p>
+              </div>
             </div>
+            <Button onClick={() => setPixDialogOpen(true)} size="sm" className="bg-primary">
+              <Crown className="h-4 w-4 mr-2" />
+              Renovar Agora
+            </Button>
           </div>
-          <Button onClick={onRenew} size="sm" className="bg-primary">
-            <Crown className="h-4 w-4 mr-2" />
-            Renovar Agora
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <PixPaymentDialog 
+        open={pixDialogOpen} 
+        onOpenChange={setPixDialogOpen}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+    </>
   );
 };
