@@ -39,15 +39,27 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchSubscription = useCallback(async () => {
     if (!user) {
       setSubscription(null);
+      setIsAdmin(false);
       setLoading(false);
       return;
     }
 
     try {
+      // Check admin role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsAdmin(!!roleData);
+
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -71,6 +83,7 @@ export const useSubscription = () => {
   }, [fetchSubscription]);
 
   const getPlanType = (): PlanType => {
+    if (isAdmin) return 'annual'; // Admins are always PRO
     if (!subscription) return 'free';
     if (subscription.status !== 'active' && subscription.status !== 'trialing') return 'free';
     return subscription.plan_type as PlanType;

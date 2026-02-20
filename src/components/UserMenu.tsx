@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { LogOut, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,11 +12,27 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdmin();
+  }, [user]);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -56,7 +73,7 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {user.email === 'erickjansons@gmail.com' && (
+        {isAdmin && (
           <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
             <Shield className="w-4 h-4 mr-2 text-primary" />
             Painel Admin
