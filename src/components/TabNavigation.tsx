@@ -20,29 +20,33 @@ export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) =>
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-2">
-        {tabs.map((tab) => {
+        {tabs.map((tab, index) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           
           return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-300 min-w-[60px]",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+            <div key={tab.id} className="flex items-center">
+              {index > 0 && (
+                <div className="w-px h-8 bg-border/50 mr-1" />
               )}
-            >
-              <div className={cn(
-                "p-1.5 rounded-xl transition-all duration-300",
-                isActive && "bg-primary/15"
-              )}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
-            </button>
+              <button
+                onClick={() => onTabChange(tab.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-300 min-w-[60px]",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className={cn(
+                  "p-1.5 rounded-xl transition-all duration-300",
+                  isActive && "bg-primary/15"
+                )}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+              </button>
+            </div>
           );
         })}
       </div>

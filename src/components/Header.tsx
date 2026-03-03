@@ -3,7 +3,11 @@ import { UserMenu } from './UserMenu';
 import { DownloadTutorialDialog } from './DownloadTutorialDialog';
 import { SubscriptionStatus } from './SubscriptionStatus';
 
-export const Header = () => {
+interface HeaderProps {
+  onNavigateAfiliados?: () => void;
+}
+
+export const Header = ({ onNavigateAfiliados }: HeaderProps) => {
   return (
     <header className="glass-effect sticky top-0 z-40 shadow-2xl border-b border-border">
       <div className="px-4 py-4 animate-fade-in-scale">
@@ -26,7 +30,7 @@ export const Header = () => {
           </div>
           <div className="flex items-center gap-2">
             <DownloadTutorialDialog />
-            <UserMenu />
+            <UserMenu onNavigateAfiliados={onNavigateAfiliados} />
           </div>
         </div>
       </div>
