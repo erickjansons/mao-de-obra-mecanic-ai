@@ -17,6 +17,7 @@ export interface AdminDashboardData {
     premium: number;
     free: number;
     renewed: number;
+    renewed_details: RenewedDetail[];
     details: UserDetail[];
   };
   affiliates: {
@@ -51,6 +52,13 @@ export interface UserDetail {
   status: string;
   current_period_start: string | null;
   current_period_end: string | null;
+}
+
+export interface RenewedDetail {
+  email: string;
+  plan_type: string;
+  renewed_at: string;
+  month: string;
 }
 
 export interface AffiliateDetail {

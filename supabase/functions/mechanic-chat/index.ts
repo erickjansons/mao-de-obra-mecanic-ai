@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -28,13 +28,15 @@ Regras importantes:
 - Sempre priorize a segurança do mecânico e do veículo
 - Quando relevante, mencione ferramentas necessárias
 - Use bullet points para listas de passos
+- Quando receber uma imagem, analise detalhadamente do ponto de vista mecânico/automotivo
 
 Áreas de expertise:
 - Diagnóstico de problemas mecânicos
 - Procedimentos de manutenção
 - Sistemas elétricos automotivos
 - Motor, suspensão, freios, transmissão
-- Dicas e truques do ofício`;
+- Dicas e truques do ofício
+- Análise visual de peças e componentes`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -43,7 +45,7 @@ Regras importantes:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
