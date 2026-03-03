@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,13 +6,33 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { parseISO } from 'date-fns';
 import { PixPaymentDialog } from './PixPaymentDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SubscriptionExpiryAlert = () => {
   const { subscription, isPremium, refetch } = useSubscription();
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  if (!isPremium() || !subscription?.current_period_end) {
+  // Check admin role
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdmin();
+  }, [user]);
+
+  if (isAdmin || !isPremium() || !subscription?.current_period_end) {
     return null;
   }
 
