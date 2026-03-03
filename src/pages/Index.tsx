@@ -103,7 +103,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <Header />
+      <Header onNavigateAfiliados={() => setActiveTab('afiliados')} />
       
       <main className="px-3 py-4">
         {/* Subscription Expiry Alert - shown on all tabs for premium users */}

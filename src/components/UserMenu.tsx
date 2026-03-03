@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, User, Shield } from 'lucide-react';
+import { LogOut, User, Shield, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-export const UserMenu = () => {
+export const UserMenu = ({ onNavigateAfiliados }: { onNavigateAfiliados?: () => void }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -79,6 +79,11 @@ export const UserMenu = () => {
             Painel Admin
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onClick={onNavigateAfiliados} className="cursor-pointer">
+          <Users className="w-4 h-4 mr-2 text-primary" />
+          Afiliados
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
           <LogOut className="w-4 h-4 mr-2" />
           Sair
