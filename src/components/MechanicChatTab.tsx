@@ -225,13 +225,6 @@ export const MechanicChatTab = () => {
     }
   };
 
-  const suggestedQuestions = [
-    "Como diagnosticar falha no motor?",
-    "Quando trocar pastilhas de freio?",
-    "Barulho na suspensão, o que pode ser?",
-    "Como verificar nível de óleo?",
-  ];
-
   if (!canUseChat) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -341,21 +334,6 @@ export const MechanicChatTab = () => {
               <p className="text-sm text-muted-foreground mb-6">
                 Sou seu assistente virtual. Pergunte sobre diagnósticos, procedimentos ou envie uma foto para análise.
               </p>
-              <div className="w-full max-w-sm space-y-2">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Sugestões:</p>
-                {suggestedQuestions.map((question, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setInput(question);
-                      textareaRef.current?.focus();
-                    }}
-                    className="w-full text-left text-sm p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50"
-                  >
-                    {question}
-                  </button>
-                ))}
-              </div>
             </div>
           ) : (
             <div className="space-y-4">
