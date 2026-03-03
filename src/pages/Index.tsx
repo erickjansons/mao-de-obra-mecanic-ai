@@ -102,9 +102,8 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-28">
       <Header />
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       
       <main className="px-3 py-4">
         {/* Subscription Expiry Alert - shown on all tabs for premium users */}
@@ -176,19 +175,7 @@ const Index = () => {
         )}
       </main>
 
-      {/* Footer with support email */}
-      <footer className="border-t border-border/50 bg-background/80 backdrop-blur-sm py-4 px-4">
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Mail className="w-3.5 h-3.5" />
-          <span>Suporte:</span>
-          <a 
-            href="mailto:ericksuporte3@gmail.com" 
-            className="text-primary hover:underline font-medium"
-          >
-            ericksuporte3@gmail.com
-          </a>
-        </div>
-      </footer>
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
