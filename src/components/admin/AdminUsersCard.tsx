@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { UserDetail } from '@/hooks/useAdminDashboard';
+import type { UserDetail, RenewedDetail } from '@/hooks/useAdminDashboard';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface Props {
@@ -12,10 +12,11 @@ interface Props {
   premium: number;
   free: number;
   renewed: number;
+  renewedDetails: RenewedDetail[];
   details: UserDetail[];
 }
 
-export const AdminUsersCard = ({ total, premium, free, renewed, details }: Props) => {
+export const AdminUsersCard = ({ total, premium, free, renewed, renewedDetails, details }: Props) => {
   const pieData = [
     { name: 'Premium', value: premium },
     { name: 'Gratuito', value: free },
@@ -26,6 +27,14 @@ export const AdminUsersCard = ({ total, premium, free, renewed, details }: Props
   const paidUsers = details
     .filter((u) => u.plan_type !== 'free' && u.status === 'active')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  // Group renewed details by month
+  const renewedByMonth: Record<string, RenewedDetail[]> = {};
+  renewedDetails.forEach((r) => {
+    if (!renewedByMonth[r.month]) renewedByMonth[r.month] = [];
+    renewedByMonth[r.month].push(r);
+  });
+  const sortedMonths = Object.keys(renewedByMonth).sort((a, b) => b.localeCompare(a));
 
   return (
     <div className="space-y-4">
@@ -91,6 +100,45 @@ export const AdminUsersCard = ({ total, premium, free, renewed, details }: Props
                 />
               </PieChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Renewed Users by Month */}
+      {sortedMonths.length > 0 && (
+        <Card className="gradient-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-primary" />
+              Renovações por Mês ({renewed})
+            </CardTitle>
+            <CardDescription>Usuários que renovaram o plano</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {sortedMonths.map((month) => {
+              const monthLabel = (() => {
+                const [y, m] = month.split('-');
+                const date = new Date(Number(y), Number(m) - 1);
+                return format(date, 'MMMM yyyy', { locale: ptBR });
+              })();
+              return (
+                <div key={month}>
+                  <p className="text-sm font-semibold text-primary capitalize mb-1">
+                    {monthLabel} ({renewedByMonth[month].length})
+                  </p>
+                  <div className="space-y-1">
+                    {renewedByMonth[month].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs bg-muted/50 rounded-lg px-3 py-2">
+                        <span className="truncate max-w-[180px]">{r.email}</span>
+                        <span className="text-muted-foreground">
+                          {r.renewed_at ? format(new Date(r.renewed_at), 'dd/MM/yy', { locale: ptBR }) : '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}

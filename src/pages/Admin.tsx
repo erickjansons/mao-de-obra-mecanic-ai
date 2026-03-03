@@ -122,6 +122,7 @@ const Admin = () => {
                 premium={data.users.premium}
                 free={data.users.free}
                 renewed={data.users.renewed}
+                renewedDetails={data.users.renewed_details}
                 details={data.users.details}
               />
             </TabsContent>

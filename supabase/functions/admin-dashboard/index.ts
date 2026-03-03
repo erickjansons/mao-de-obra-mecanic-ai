@@ -91,13 +91,26 @@ serve(async (req) => {
     const freeUsers = totalUsers - usersWithSubscription;
 
     // Renewed subscriptions: current_period_start is significantly after created_at
-    const renewedSubscriptions = activeSubscriptions.filter((s: any) => {
+    const renewedSubs = activeSubscriptions.filter((s: any) => {
       if (!s.current_period_start || !s.created_at) return false;
       const created = new Date(s.created_at).getTime();
       const periodStart = new Date(s.current_period_start).getTime();
       const diffDays = (periodStart - created) / (1000 * 60 * 60 * 24);
       return diffDays > 2; // More than 2 days difference = renewed
-    }).length;
+    });
+    const renewedSubscriptions = renewedSubs.length;
+
+    // Renewed details grouped by month
+    const renewedDetails = renewedSubs.map((s: any) => {
+      const renewedUser = users.find((u: any) => u.id === s.user_id);
+      const renewMonth = s.current_period_start ? s.current_period_start.substring(0, 7) : "N/A";
+      return {
+        email: renewedUser?.email || "N/A",
+        plan_type: s.plan_type,
+        renewed_at: s.current_period_start,
+        month: renewMonth,
+      };
+    });
 
     // Affiliate metrics
     const totalAffiliates = affiliates.length;
@@ -217,6 +230,7 @@ serve(async (req) => {
         premium: usersWithSubscription,
         free: freeUsers,
         renewed: renewedSubscriptions,
+        renewed_details: renewedDetails,
         details: userDetails,
       },
       affiliates: {

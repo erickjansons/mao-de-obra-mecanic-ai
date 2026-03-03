@@ -8,13 +8,15 @@ import { ServiceList } from '@/components/ServiceList';
 import { PricingPlans } from '@/components/PricingPlans';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { SubscriptionExpiryAlert } from '@/components/SubscriptionExpiryAlert';
-import { MechanicChat } from '@/components/MechanicChat';
+import { MechanicChatTab } from '@/components/MechanicChatTab';
 import { AffiliateDashboard } from '@/components/AffiliateDashboard';
 import { MyAppsCarousel } from '@/components/MyAppsCarousel';
 import { useSupabaseServices } from '@/hooks/useSupabaseServices';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
+import { Mail } from 'lucide-react';
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const { user, loading: authLoading } = useAuth();
@@ -63,7 +65,6 @@ const Index = () => {
         description: 'Sua assinatura foi ativada com sucesso.',
       });
       refetchSubscription();
-      // Clean URL
       window.history.replaceState({}, '', '/');
     } else if (canceled === 'true') {
       toast({
@@ -104,7 +105,6 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <MechanicChat />
       
       <main className="px-3 py-4">
         {/* Subscription Expiry Alert - shown on all tabs for premium users */}
@@ -163,6 +163,10 @@ const Index = () => {
           />
         )}
 
+        {activeTab === 'chat' && (
+          <MechanicChatTab />
+        )}
+
         {activeTab === 'planos' && (
           <PricingPlans />
         )}
@@ -171,6 +175,20 @@ const Index = () => {
           <AffiliateDashboard />
         )}
       </main>
+
+      {/* Footer with support email */}
+      <footer className="border-t border-border/50 bg-background/80 backdrop-blur-sm py-4 px-4">
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Mail className="w-3.5 h-3.5" />
+          <span>Suporte:</span>
+          <a 
+            href="mailto:ericksuporte3@gmail.com" 
+            className="text-primary hover:underline font-medium"
+          >
+            ericksuporte3@gmail.com
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };
