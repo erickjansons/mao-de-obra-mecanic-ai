@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { TabNavigation, TabType } from '@/components/TabNavigation';
 import { Dashboard } from '@/components/Dashboard';
@@ -106,73 +107,74 @@ const Index = () => {
       <Header onNavigateAfiliados={() => setActiveTab('afiliados')} />
       
       <main className="px-3 py-4">
-        {/* Subscription Expiry Alert - shown on all tabs for premium users */}
         <SubscriptionExpiryAlert />
         
-        {activeTab === 'dashboard' && (
-          <>
-            {!isPremium() && (
-              <UpgradePrompt 
-                currentCount={services.length} 
-                limit={getServiceLimit()} 
-                onUpgrade={() => setActiveTab('planos')} 
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {activeTab === 'dashboard' && (
+              <>
+                {!isPremium() && (
+                  <UpgradePrompt 
+                    currentCount={services.length} 
+                    limit={getServiceLimit()} 
+                    onUpgrade={() => setActiveTab('planos')} 
+                  />
+                )}
+                <Dashboard stats={stats} services={services} />
+              </>
+            )}
+            
+            {activeTab === 'novo' && (
+              <>
+                {!isPremium() && (
+                  <UpgradePrompt 
+                    currentCount={services.length} 
+                    limit={getServiceLimit()} 
+                    onUpgrade={() => setActiveTab('planos')} 
+                  />
+                )}
+                <ServiceForm 
+                  onSubmit={handleAddService} 
+                  onSuccess={() => setActiveTab('dashboard')}
+                />
+                <MyAppsCarousel />
+              </>
+            )}
+            
+            {activeTab === 'lista' && (
+              <ServiceList
+                services={services}
+                filteredServices={filteredServices}
+                onToggleStatus={toggleStatus}
+                onUpdate={updateService}
+                onDelete={deleteService}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+                selectedStatus={selectedStatus}
+                onStatusChange={setSelectedStatus}
+                onClearFilters={clearFilters}
+                availableMonths={availableMonths}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onToggleSort={toggleSort}
+                filteredStats={filteredStats}
+                onSwitchToNew={() => setActiveTab('novo')}
               />
             )}
-            <Dashboard stats={stats} services={services} />
-          </>
-        )}
-        
-        {activeTab === 'novo' && (
-          <>
-            {!isPremium() && (
-              <UpgradePrompt 
-                currentCount={services.length} 
-                limit={getServiceLimit()} 
-                onUpgrade={() => setActiveTab('planos')} 
-              />
-            )}
-            <ServiceForm 
-              onSubmit={handleAddService} 
-              onSuccess={() => setActiveTab('dashboard')}
-            />
-            <MyAppsCarousel />
-          </>
-        )}
-        
-        {activeTab === 'lista' && (
-          <ServiceList
-            services={services}
-            filteredServices={filteredServices}
-            onToggleStatus={toggleStatus}
-            onUpdate={updateService}
-            onDelete={deleteService}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-            onClearFilters={clearFilters}
-            availableMonths={availableMonths}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onToggleSort={toggleSort}
-            filteredStats={filteredStats}
-            onSwitchToNew={() => setActiveTab('novo')}
-          />
-        )}
 
-        {activeTab === 'chat' && (
-          <MechanicChatTab />
-        )}
-
-        {activeTab === 'planos' && (
-          <PricingPlans />
-        )}
-
-        {activeTab === 'afiliados' && (
-          <AffiliateDashboard />
-        )}
+            {activeTab === 'chat' && <MechanicChatTab />}
+            {activeTab === 'planos' && <PricingPlans />}
+            {activeTab === 'afiliados' && <AffiliateDashboard />}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />

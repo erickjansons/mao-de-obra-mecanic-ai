@@ -1,5 +1,6 @@
-import { LayoutDashboard, Plus, List, Crown, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ClipboardList, Crown, MessageCircleMore } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export type TabType = 'dashboard' | 'novo' | 'lista' | 'planos' | 'afiliados' | 'chat';
 
@@ -10,9 +11,9 @@ interface TabNavigationProps {
 
 const tabs = [
   { id: 'dashboard' as TabType, label: 'Painel', icon: LayoutDashboard },
-  { id: 'novo' as TabType, label: 'Novo Serviço', icon: Plus },
-  { id: 'lista' as TabType, label: 'Lista', icon: List },
-  { id: 'chat' as TabType, label: 'Chat IA', icon: MessageCircle },
+  { id: 'novo' as TabType, label: 'Novo Serviço', icon: PlusCircle },
+  { id: 'lista' as TabType, label: 'Lista', icon: ClipboardList },
+  { id: 'chat' as TabType, label: 'Chat IA', icon: MessageCircleMore },
   { id: 'planos' as TabType, label: 'Planos', icon: Crown },
 ];
 
@@ -25,26 +26,37 @@ export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) =>
           const isActive = activeTab === tab.id;
           
           return (
-            <div key={tab.id} className="flex items-center">
+            <div key={tab.id} className="flex items-center flex-1">
               {index > 0 && (
-                <div className="w-px h-8 bg-border/50 mr-1" />
+                <div className="w-px h-8 bg-border/40 shrink-0" />
               )}
               <button
                 onClick={() => onTabChange(tab.id)}
-                className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-300 min-w-[60px]",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                className="relative flex flex-col items-center gap-1 py-1.5 w-full transition-colors duration-200"
               >
-                <div className={cn(
-                  "p-1.5 rounded-xl transition-all duration-300",
-                  isActive && "bg-primary/15"
+                {isActive && (
+                  <motion.div
+                    layoutId="tab-indicator"
+                    className="absolute inset-0 mx-2 rounded-2xl bg-primary/10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <motion.div
+                  className={cn(
+                    "relative z-10 p-1.5 rounded-xl transition-colors duration-200",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}
+                  animate={isActive ? { scale: 1.15 } : { scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                  <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.8} />
+                </motion.div>
+                <span className={cn(
+                  "relative z-10 text-[10px] font-medium leading-none transition-colors duration-200",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+                  {tab.label}
+                </span>
               </button>
             </div>
           );
